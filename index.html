@@ -5307,6 +5307,15 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
+// 🌟 データベース（Firestore）用の部品を新しく追加
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyAt0C0_3ijzF1p0R_fHyqYqnDjZog3-xPg",
   authDomain: "yyotest.firebaseapp.com",
@@ -5319,72 +5328,95 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app); // 🌟 データベースを初期化
 
 auth.useDeviceLanguage();
-
 const provider = new GoogleAuthProvider();
+
+// エラーキャッチ用
+window.addEventListener("error", e => {
+  alert("JS ERROR\n" + e.message);
+});
+window.addEventListener("unhandledrejection", e => {
+  alert("PROMISE ERROR\n" + e.reason);
+});
 
 alert("Firebaseスクリプト実行");
 
-onAuthStateChanged(auth, (user) => {
-
-  if (user) {
-
-    alert(
-      "ログイン中\n" +
-      user.displayName
-    );
-
-    console.log(user);
-
-  } else {
-
-    alert("未ログイン");
-
+// 🌟 初回ログイン時に初期データを作る（または既存データを読み込む）関数
+async function checkAndCreateUserData(user) {
+  const userDocRef = doc(db, "users", user.uid); // users箱の中の【自分のUID】の場所を指定
+  
+  try {
+    const docSnap = await getDoc(userDocRef);
+    
+    if (!docSnap.exists()) {
+      // 🎁 データが存在しない＝「初めてのログイン」の場合
+      alert("初回ログインを検知しました！\n初期チームを生成します...");
+      
+      // 無料枠を徹底節約するため、gameDataの中に全部まとめて保存！
+      await setDoc(userDocRef, {
+        name: user.displayName || "名無し監督",
+        createdAt: serverTimestamp(),
+        gameData: {
+          teamName: "マイチーム",
+          stats: { wins: 0, losses: 0, draws: 0 },
+          // ⚾ テスト用の初期選手データ（あとからいくらでも変更・拡張できます）
+          players: [
+            { name: "エース山田", position: "投手", speed: 135, stamina: 60 },
+            { name: "サトウ", position: "内野手", speed: 125, stamina: 40 },
+            { name: "スズキ", position: "外野手", speed: 130, stamina: 45 }
+          ]
+        }
+      });
+      
+      alert("初期データの作成が完了しました！");
+    } else {
+      // 💾 すでにデータがある＝「2回目以降のログイン」の場合
+      alert("おかえりなさい！\nセーブデータを読み込みました。");
+      console.log("読み込んだデータ:", docSnap.data());
+    }
+  } catch (error) {
+    alert("データベース処理でエラー発生:\n" + error.message);
   }
+}
 
+// ログイン状態の監視
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    alert("ログイン中\n" + user.displayName);
+    console.log(user);
+    
+    // 🌟 ログインが確認されたら、データチェックを行う
+    await checkAndCreateUserData(user);
+    
+  } else {
+    alert("未ログイン");
+  }
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-
   const btn = document.getElementById("firebase-login-btn");
-
   if (!btn) {
-
     alert("firebase-login-btn が見つかりません");
-
     return;
-
   }
 
   btn.onclick = async () => {
-
+    alert("ボタン押下");
     try {
-
-      alert("ログイン開始");
-
+      alert("popup開始");
       const result = await signInWithPopup(auth, provider);
-
-      alert(
-        "ログイン成功\n" +
-        result.user.displayName
-      );
-
+      alert("popup終了");
+      alert("ログイン成功\n" + result.user.displayName);
     } catch (err) {
-
-      alert(
-        "ログイン失敗\n" +
-        err.message
-      );
-
-      console.error(err);
-
+      alert("catch突入");
+      alert("ログイン失敗\n" + err.message);
     }
-
   };
-
 });
 
 </script>
+
 </body>
 </html>
