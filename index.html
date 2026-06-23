@@ -74,21 +74,15 @@ table th, table td { white-space: nowrap; overflow: hidden; text-overflow: clip;
 .team-sec{font-size:9px;font-weight:bold;color:#333;margin:3px 0 2px;}
 .cards-row{display:flex;flex-wrap:nowrap;gap:2px;margin-bottom:2px;}
 .player-card{display:inline-flex;flex-direction:column;background:#fff;border:1px solid #bbb;border-radius:2px;width:120px;overflow:hidden;flex-shrink:0;}
-.pc-dead{opacity:0.42;} .pc-dead .pc-head{background:#888 !important;}
 .pc-head{display:flex;align-items:center;justify-content:space-between;padding:1px 3px;font-size:7px;font-weight:bold;color:#000;}
-.pc-pot{font-size:6px;background:rgba(255,255,255,0.7);padding:0 2px;border-radius:2px;}
 .pc-stats{display:flex;border-bottom:1px solid #ddd;}
 .pc-stat-main{text-align:center;padding:1px 2px;border-right:1px solid #ddd;min-width:26px;}
-.pc-stat-main .pc-sl{font-size:7px;color:#555;display:block;line-height:1;font-weight:bold;}
+.pc-stat-main .pc-sl{font-size:7px;color:#c60;font-weight:bold;}
 .pc-stat-main .pc-sv{font-size:9px;line-height:1.2;font-weight:bold;}
 .pc-stat{flex:1;text-align:center;padding:1px 0;border-right:1px solid #eee;min-width:0;}
 .pc-stat:last-child{border-right:none;}
 .pc-sl{font-size:5px;color:#888;display:block;line-height:1;}
 .pc-sv{font-size:6.5px;line-height:1.2;}
-.pc-gain{display:flex;border-bottom:1px solid #ddd;background:#fafafa;min-height:10px;}
-.pc-gc-main{text-align:center;padding:1px 2px;border-right:1px solid #ddd;min-width:26px;font-size:6px;color:#777;line-height:1.1;}
-.pc-gc{flex:1;text-align:center;padding:1px 0;border-right:1px solid #eee;font-size:6px;color:#1a8;line-height:1.1;min-width:0;}
-.pc-gc:last-child{border-right:none;}
 .pc-abis{padding:1px 2px;display:flex;flex-wrap:wrap;gap:1px;min-height:8px;}
 .popup{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:none;justify-content:center;align-items:center;z-index:1000;}
 .popup-inner{background:#fff;padding:14px;width:95%;max-width:580px;max-height:88%;overflow-y:auto;border-radius:8px;position:relative;line-height:1.6;font-size:10px;}
@@ -512,7 +506,7 @@ Firebase確認
   <div style="display:flex; gap:5px; flex-wrap:wrap; margin-top:4px;">
     <button class="mode-btn active" id="btn-solo" onclick="switchMode('solo')">ホーム</button>
     <button class="mode-btn" id="btn-team" onclick="switchMode('team')">チーム</button>
-    <button class="mode-btn" id="btn-match" onclick="switchMode('match')">対戦</button>
+    <button class="mode-btn" id="btn-match" onclick="switchMode('match')">ソロ対戦</button>
     <button class="help-btn" onclick="showHelp()">説明</button>
     <button class="mode-btn" id="btn-edit" onclick="switchMode('edit')">EDIT</button>
     <button class="mode-btn" id="btn-pennant" onclick="switchMode('pennant')">ペナント</button>
@@ -552,6 +546,16 @@ Firebase確認
     <div id="save-slots" style="max-height:65vh; overflow-y:auto;"></div>
   </div>
 </div>
+<!-- ★CPUチーム用JSONコピー画面：保存スロットを「GitHubのcpu-team-dataに貼り付けるテキスト」に変換して表示する -->
+<div id="cpuJsonPopup" class="popup" onclick="this.style.display='none'">
+  <div class="popup-inner" onclick="event.stopPropagation()">
+    <span class="close-btn" onclick="document.getElementById('cpuJsonPopup').style.display='none'">×</span>
+    <h2 style="margin-top:0; border-bottom:2px solid #333; padding-bottom:4px; font-size:12px;">CPUチーム用JSON</h2>
+    <p style="font-size:10px; color:#555;">下の「コピー」を押してから、GitHubの<code>cpu-team-data</code>の配列<code>[ ]</code>の中に貼り付けてください。すでに他のチームがある場合は、最後のチームの後に「,」を入れてから貼り付けてください。</p>
+    <textarea id="cpuJsonText" readonly style="width:100%; height:200px; font-size:9px; box-sizing:border-box;" onclick="this.select()"></textarea>
+    <button onclick="copyCpuJsonText()" style="margin-top:8px; padding:6px 14px; font-size:11px; font-weight:bold; background:#1a73e8; color:#fff; border:none; border-radius:4px;">📋 コピー</button>
+  </div>
+</div>
 
 <div id="panel-solo" class="mode-panel show">
   <div style="margin-bottom:10px;">
@@ -578,7 +582,12 @@ Firebase確認
 </div>
 
 <div id="panel-match" class="mode-panel">
-  <div class="order-title">⚔️ 対戦モード</div>
+  <div class="order-title">⚔️ ソロ対戦モード</div>
+  <div style="margin-bottom:10px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+    <span style="font-size:9px; font-weight:bold; color:#555;">対戦相手：</span>
+    <select id="match-rival-select" style="font-size:10px; padding:3px 6px; border:1px solid #ccc; border-radius:3px;" onchange="onRivalTeamSelect()"></select>
+    <span id="rival-load-status" style="font-size:9px; color:#888;"></span>
+  </div>
   <div style="margin-bottom:10px;">
     <button class="team-grow-btn" onclick="startMatch(1)" style="background:#d32f2f; font-size:14px; padding:10px 20px;">1試合</button>
     <button class="team-grow-btn" onclick="startMatch(100)" style="background:#1976d2; font-size:14px; padding:10px 20px; margin-left:5px;">100試合</button>
@@ -598,6 +607,9 @@ Firebase確認
   <div id="match-log" style="background:#fff; border:1px solid #ccc; border-radius:4px; height:180px; overflow-y:scroll; padding:6px; font-size:10px; line-height:1.8;"></div>
   <div id="match-teams-info" style="margin-top:10px;"></div>
 </div>
+<script type="application/json" id="cpu-team-data">
+[]
+</script>
 
 <div id="panel-pennant" class="mode-panel">
   <div class="order-title">🏆 ペナントモード</div>
@@ -995,6 +1007,7 @@ function switchMode(m){
   if(m === 'edit') { document.getElementById('edit-team-name').value = myTeamName; renderEditScreen(); }
   if(m === 'order') { renderPitcherAssignUI('order'); showOrderScreen(); }
   if(m === 'match' && (!matchMyTeam || !matchRivalTeam)) setupDefaultMatchTeams();
+  if(m === 'match') renderRivalSelectOptions();
   if(m === 'pennant') {
   if (pennantResults) {
     // すでにペナントが開始されて結果がある場合は、結果画面を表示したままにする
@@ -1115,6 +1128,7 @@ function renderSaveUI(){
         <span style="flex:1;font-weight:bold;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${tName}</span>
         <button onclick="loadTeam(${idx})" style="padding:2px 7px;font-size:9px;background:#1a73e8;color:#fff;border:none;border-radius:3px;cursor:pointer;">読込</button>
         <button onclick="saveTeam(${idx})" style="padding:2px 5px;font-size:9px;background:#757575;color:#fff;border:none;border-radius:3px;cursor:pointer;">上書</button>
+        <button onclick="exportSlotAsCpuJson(${idx})" style="padding:2px 5px;font-size:9px;background:#2e7d32;color:#fff;border:none;border-radius:3px;cursor:pointer;">CPU用</button>
         <button onclick="deleteSaveSlot(${idx})" style="padding:2px 5px;font-size:9px;background:#c62828;color:#fff;border:none;border-radius:3px;cursor:pointer;">削</button>
       </div>`;
     } else {
@@ -1149,6 +1163,28 @@ function deleteSaveSlot(idx){
   if(!confirm(`Slot ${idx} を削除しますか？`)) return;
   localStorage.removeItem(SAVE_KEY + idx);
   renderSaveUI();
+}
+// ★保存スロットの内容を「GitHubのcpu-team-data配列に貼り付けるJSON」としてポップアップ表示する
+function exportSlotAsCpuJson(idx){
+  const raw = localStorage.getItem(SAVE_KEY + idx);
+  if(!raw) { alert("このスロットにはデータがありません"); return; }
+  const data = JSON.parse(raw);
+  const textEl = document.getElementById('cpuJsonText');
+  if(textEl) textEl.value = JSON.stringify(data, null, 2);
+  document.getElementById('cpuJsonPopup').style.display = 'flex';
+}
+
+// ★コピー：クリップボードAPIが使えない環境ではテキストエリアの選択のみ行う
+async function copyCpuJsonText(){
+  const textEl = document.getElementById('cpuJsonText');
+  if(!textEl) return;
+  textEl.select();
+  try {
+    await navigator.clipboard.writeText(textEl.value);
+    alert("コピーしました！GitHubのcpu-team-data配列に貼り付けてください。");
+  } catch(e){
+    alert("自動コピーに失敗しました。テキストを選択状態にしたので、そのまま手動でコピーしてください。");
+  }
 }
 function saveTeam(slot) {
   if(!confirm(`Slot ${slot} に保存しますか？`)) return;
@@ -1374,7 +1410,7 @@ function genPlayer(posType,tierKey){
     aS,pS,pAvg,aAvg,
     abi:abiObj,
     visAbi,
-    bat:Math.random()<.48?'R':Math.random()<.96?'L':'S',
+    bat: isPit ? (Math.random() < 0.5 ? 'R' : 'L') : (Math.random() < 0.48 ? 'R' : Math.random() < 0.96 ? 'L' : 'S'),
     p:pot, g:[0,0,0,0,0], aw_arr:[false,false,false,false,false], pchg:0, prv:false,
     acqType:'draft', acqPeriod:getCurrentPeriod(), acqRank:null,
   };
@@ -1429,22 +1465,22 @@ if(isPit){
 }
 
 function cardF(f){
-  let dead=f.p<=0,[r,c]=getRank(f.p), avg=Math.round(f.s.reduce((a,b)=>a+b)/5),[ar,ac]=getRank(avg), pc=posCls(f.pos), lbl=["ミ","パ","走","肩","守"];
+  let avg=Math.round(f.s.reduce((a,b)=>a+b)/5),[ar,ac]=getRank(avg), pc=posCls(f.pos), lbl=["ミ","パ","走","肩","守"];
   let statsRow= `<div class="pc-stat-main"><span class="pc-sl" style="font-size:7px;color:#c60;font-weight:bold;">総合</span><span class="pc-sv"><span class="rank rank-${ac}">${ar}</span>${avg}</span></div>`+
     f.s.map((v,i)=>{ let[vr,vc]=getRank(v); return`<div class="pc-stat"><span class="pc-sl">${lbl[i]}</span><span class="pc-sv"><span class="rank rank-${vc}">${vr}</span>${v}</span></div>`; }).join("");
   
-  return `<div class="player-card${dead?' pc-dead':''}">
-  <div class="pc-head ${pc}"><span>${f.displayName || f.name} <span class="bat-${f.bat}">${f.bat}</span></span><span class="pc-pot"><span class="rank rank-${c}">${r}</span>${f.p}</span></div>
+  return `<div class="player-card">
+  <div class="pc-head ${pc}"><span>${f.displayName || f.name} <span class="bat-${f.bat}">${f.bat}</span></span></div>
   <div class="pc-stats">${statsRow}</div><div class="pc-abis">${abiHtml(f.abi)}</div></div>`;
 }
 
 function cardP(p){
-  let dead=p.p<=0,[r,c]=getRank(p.p), cs=[cvSpeed(p.s[0]),p.s[1],p.s[2],p.s[3],p.s[4]], avg=Math.round(cs.reduce((a,b)=>a+b)/5),[ar,ac]=getRank(avg), lbl=["速","威","変","制","体"];
+  let cs=[cvSpeed(p.s[0]),p.s[1],p.s[2],p.s[3],p.s[4]], avg=Math.round(cs.reduce((a,b)=>a+b)/5),[ar,ac]=getRank(avg), lbl=["速","威","変","制","体"];
   let statsRow= `<div class="pc-stat-main"><span class="pc-sl" style="font-size:7px;color:#c60;font-weight:bold;">総合</span><span class="pc-sv"><span class="rank rank-${ac}">${ar}</span>${avg}</span></div>`+
     p.s.map((v,i)=>{ let sc=i===0?cvSpeed(v):v,[vr,vc]=getRank(sc); return`<div class="pc-stat"><span class="pc-sl">${lbl[i]}</span><span class="pc-sv"><span class="rank rank-${vc}">${vr}</span>${v}</span></div>`; }).join("");
   
-  return `<div class="player-card${dead?' pc-dead':''}">
-  <div class="pc-head pitcher"><span>${p.displayName || p.name} <span class="bat-${p.bat}">${p.bat}</span></span><span class="pc-pot"><span class="rank rank-${c}">${r}</span>${p.p}</span></div>
+  return `<div class="player-card">
+  <div class="pc-head pitcher"><span>${p.displayName || p.name} <span class="bat-${p.bat}">${p.bat}</span></span></div>
   <div class="pc-stats">${statsRow}</div><div class="pc-abis">${abiHtml(p.abi)}</div></div>`;
 }
 
@@ -1470,26 +1506,34 @@ function teamRender(){
     secBench.style.display = "none";
     rowBench.innerHTML = "";
   }
-  
-  if(tF.every(f=>f.p<=0) && tP.every(p=>p.p<=0)){ switchMode('order'); }
 }
 
 function teamReset(){
   isRandomTeamMode = true; myTeamName = "マイチーム";
-  // s[0]=ミート s[1]=パワー s[2]=走塁 s[3]=肩 s[4]=守備
-  const G = [
-    [[0,40],[2,40]],  // 外野1: ミ走
-    [[1,40],[3,40]],  // 外野2: パ肩
-    [[2,40],[4,40]],  // 外野3: 走守
-    [[4,40],[3,40]],  // 内野1: 守肩（主にショート想定）
-    [[2,40],[4,40]],  // 内野2: 走守
-    [[0,40],[3,40]],  // 内野3: ミ肩
-    [[4,40],[3,40]],  // 捕手: 守肩
-    [[0,40],[1,40]],  // 内野4: ミパ
-    [[0,40],[1,40]],  // ランダム: ミパ
-  ];
-  tF = FPOS.map((pos, i) => mkFielder(pos, G[i] || []));
-  tP = Array.from({length:5}, () => mkPitcher());
+  
+  // 野手9名（スタメンのみ、控えなし）: 全て40（E）、特能なし
+  tF = FPOS.map((pos, i) => ({
+    name: randName(),
+    bat: Math.random() < 0.48 ? "R" : Math.random() < 0.96 ? "L" : "S",
+    pos: pos === null ? "内野" : pos,
+    s: [40, 40, 40, 40, 40],
+    g: [0, 0, 0, 0, 0],
+    aw: [false, false, false, false, false],
+    p: 0, pchg: 0, prv: false,
+    abi: {}
+  }));
+  
+  // 投手5名（スタメンのみ、控えなし）: 球速140（E）、他全て40（E）、特能なし
+  tP = Array.from({length:5}, () => ({
+    name: randName(),
+    bat: Math.random() < 0.5 ? "R" : "L",
+    s: [140, 40, 40, 40, 40],
+    g: [0, 0, 0, 0, 0],
+    aw: [false, false, false, false, false],
+    p: 0, pchg: 0, prv: false,
+    abi: {}
+  }));
+  
   fOrder = []; pAssign = [0,0,0,0,1,1,2,3,4];
   document.getElementById('edit-team-name').value = myTeamName;
   document.getElementById('team-name-display').textContent = myTeamName;
@@ -1662,13 +1706,18 @@ function nextReveal(){
     tF = orig.tF;
     tP = orig.tP;
     
+    // ★直前まで使っていた仮チーム（オールEチーム等）のfOrder/pAssignが
+    //   人数が同じだと誤って再利用されてしまうため、ドラフト確定時は必ず空にしてから再計算する
+    fOrder = [];
+    pAssign = [];
+
     // 2. 既存の自動オーダー設定関数を呼んで初期配置を行う
     autoAssignFielders();
     autoAssignPitchers();
     teamRender(); // チーム画面のカードを更新
     
-    // 3. チーム画面へ遷移
-    switchMode('team');
+    // 3. 直接「オーダー設定画面」へ遷移
+    switchMode('order');
     S.phase = 'done'; // ドラフト状態を終了させる
   } else {
     render();
@@ -1698,11 +1747,15 @@ function tapLineup(type,idx){
   }
   render();
 }
-function confirmDraftOrder(){ // ← confirmDraftOrder に変更
+function confirmDraftOrder(){ 
   S.phase='done';
   const orig = toOrigFormat(S.drafted);
   tF = orig.tF;
   tP = orig.tP;
+  // ★直前まで使っていた仮チーム（オールEチーム等）のfOrder/pAssignが
+  //   人数が同じだと誤って再利用されてしまうため、ドラフト確定時は必ず空にしてから再計算する
+  fOrder = [];
+  pAssign = [];
   autoAssignFielders();
   autoAssignPitchers();
   teamRender();
@@ -2994,6 +3047,84 @@ function setupDefaultMatchTeams() {
 
 function updateMatchTeamsUI() { 
   renderMatchTeamTables(matchMyTeam, matchRivalTeam, null, null); 
+}
+// ★セーブデータと同じ形式 { fielder, pitcher, fOrder, pAssign } から簡易総合力を算出（保存画面の総合力計算と同じ基準）
+function calcTeamOverallFromSaveData(s){
+  try {
+    let fArr = s.fielder||[], pArr = s.pitcher||[];
+    let fOrderArr = s.fOrder||[];
+    let starterFArr = fOrderArr.length === fArr.length ? fArr.filter((f,i)=> fOrderArr[i] && fOrderArr[i].defPos !== "控え") : fArr;
+    let fSum = starterFArr.reduce((acc,f)=> acc + (f.s ? f.s.reduce((a,b)=>a+b,0)/5 : 50), 0);
+    let fAvg = starterFArr.length > 0 ? fSum/starterFArr.length : 50;
+    let pSum = 0;
+    (s.pAssign||[0,0,0,0,1,1,2,3,4]).forEach(pi=>{
+      if(pArr[pi]) pSum += (cvSpeed(pArr[pi].s[0]||145) + (pArr[pi].s[1]||50) + (pArr[pi].s[2]||50) + (pArr[pi].s[3]||50) + (pArr[pi].s[4]||50)) / 5;
+    });
+    let pAvg = pSum / 9;
+    return Math.round(fAvg * 0.5 + pAvg * 0.5);
+  } catch(e){ return 50; }
+}
+
+// ★ソロ対戦：外部から読み込んだCPUチーム一覧（読み込むまでは空）
+let externalCpuTeams = [];
+
+// ★対戦相手プルダウンの選択肢を再構築（デフォルト＋外部チーム＋「外部チームを読み込む」）
+function renderRivalSelectOptions(){
+  let sel = document.getElementById('match-rival-select');
+  if(!sel) return;
+  let cur = sel.value || 'default';
+  let opts = `<option value="default">オールDチーム（デフォルト）</option>`;
+  externalCpuTeams.forEach((t,i)=>{
+    let ov = calcTeamOverallFromSaveData(t);
+    let nm = (t.teamName || ('CPUチーム'+(i+1))).slice(0,12);
+    opts += `<option value="ext-${i}">${nm} 総合${ov}</option>`;
+  });
+  opts += `<option value="__load_external__">🌐 外部チームを読み込む…</option>`;
+  sel.innerHTML = opts;
+  if([...sel.options].some(o=>o.value===cur)) sel.value = cur;
+}
+
+// ★プルダウン操作時：通常選択ならチームを切替、「外部チームを読み込む」を選んだ時だけfetchする
+function onRivalTeamSelect(){
+  let sel = document.getElementById('match-rival-select');
+  if(!sel) return;
+  let val = sel.value;
+  if(val === '__load_external__'){
+    loadExternalCpuTeams();
+    return;
+  }
+  if(val === 'default'){
+    matchRivalTeam = createDefaultMatchTeam(true);
+  } else if(val.indexOf('ext-') === 0){
+    let idx = parseInt(val.slice(4));
+    let data = externalCpuTeams[idx];
+    if(data) matchRivalTeam = createTeamFromData(data, data.teamName || ('CPUチーム'+(idx+1)));
+  }
+  updateMatchTeamsUI();
+}
+
+// ★GitHub上のindex.html内に埋め込まれたCPUチームデータ(#cpu-team-data)を取得して反映
+async function loadExternalCpuTeams(){
+  let statusEl = document.getElementById('rival-load-status');
+  if(statusEl) statusEl.textContent = '読込中...';
+  try {
+    const url = 'https://raw.githubusercontent.com/yakisoba1229/yyotest/main/index.html?_=' + Date.now();
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('fetch failed');
+    const text = await res.text();
+    const m = text.match(/<script[^>]*id=["']cpu-team-data["'][^>]*>([\s\S]*?)<\/script>/);
+    if(!m) throw new Error('data block not found');
+    const arr = JSON.parse(m[1]);
+    if(!Array.isArray(arr)) throw new Error('invalid format');
+    externalCpuTeams = arr;
+    renderRivalSelectOptions();
+    if(statusEl) statusEl.textContent = `外部チーム${arr.length}件を読込みました`;
+  } catch(e){
+    alert("外部ファイルが取得できません");
+    if(statusEl) statusEl.textContent = '';
+    let sel = document.getElementById('match-rival-select');
+    if(sel) sel.value = 'default';
+  }
 }
 
 
@@ -5124,7 +5255,7 @@ function genReinforcePlayer(posType, type) {
     isGenius, awk, gBonus, ab,
     aS, pS, pAvg, aAvg,
     abi: abiObj, visAbi,
-    bat: Math.random() < 0.48 ? 'R' : Math.random() < 0.96 ? 'L' : 'S',
+    bat: isPit ? (Math.random() < 0.5 ? 'R' : 'L') : (Math.random() < 0.48 ? 'R' : Math.random() < 0.96 ? 'L' : 'S'),
     p: cl(40 + ri(25), 10, 100), g: [0,0,0,0,0], aw_arr: [false,false,false,false,false], pchg: 0, prv: false,
     acqType: 'reinforce', acqPeriod: getCurrentPeriod(), acqRank: '補強',
     isForeigner, isReleased: !isForeigner
