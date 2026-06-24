@@ -662,9 +662,17 @@ body {
 </style>
 </head>
 <body>
-<div class="header-row" style="position:sticky;top:0;background:#fff;z-index:300;padding:4px 0;">
- <div class="title-text">野球成長シミュレータ<br>@BBLyaki</div>
+<!-- ── 上部固定ヘッダー：ゲームタイトル・ログイン・ユーザー情報・期 ── -->
+<div class="top-header">
+  <div class="top-header-icon" id="header-user-icon" title="ユーザーアイコン（将来設定可能）">🤔</div>
+  <div class="top-header-info">
+    <div class="top-header-title">野球成長シミュレータ@BBLyaki</div>
+    <div class="top-header-sub"><span id="header-user-name">ゲスト</span>　<span id="header-term-label">1期（未設定〜未設定）</span></div>
+  </div>
+  <!-- firebase-login-btn: ID/クリック処理は既存スクリプトのまま、見た目だけ変更 -->
+  <button id="firebase-login-btn" class="top-header-login-btn">ログイン</button>
 </div>
+
 <!-- ==========================================================================
      ▼ 【新規追加】スマホ風大枠ナビゲーション画面パネル
      ========================================================================== -->
@@ -1368,7 +1376,7 @@ let currentMode = "nav-home";
 
 /* 各画面の背景画像（外部ファイル化の準備）。パスを入れるだけで反映、空文字なら背景なし */
 const SCREEN_BACKGROUNDS = {
-  'panel-nav-home': '', 'panel-nav-team': '', 'panel-nav-scout': '', 'panel-nav-game': '',
+  'panel-nav-home': 'https://cdn.jsdelivr.net/gh/yakisoba1229/yyotest@main/bg_home.jpg', 'panel-nav-team': '', 'panel-nav-scout': '', 'panel-nav-game': '',
   'panel-nav-rule': '', 'panel-nav-shop': '', 'panel-nav-records': '', 'panel-nav-other': '',
   'panel-team': '', 'panel-match': '', 'panel-pennant': '', 'panel-order': '',
   'panel-edit': '', 'panel-result': '', 'panel-draft': '', 'panel-reinforce': ''
