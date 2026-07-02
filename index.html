@@ -5,7 +5,17 @@
 <title>野球シミュ@BBLyaki v5.4.5 </title>
 <style>
 *{box-sizing:border-box;}
-body{font-family:sans-serif;font-size:10px;background:#e8e8e8;margin:6px;zoom: 2.0; }
+body{
+  font-family:sans-serif;font-size:10px;background:#e8e8e8;margin:6px;
+  /* 以下の背景カバー設定を追加 */
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+ /* fixed要素を避けるための物理余白を設定 */
+  padding-top: 64px !important;    /* ヘッダーの高さ */
+  padding-bottom: 85px !important; /* フッターの高さ + 15px余白 */
+}
 .header-row{display:flex;align-items:flex-start;flex-direction:column;gap:3px;margin-bottom:5px;}
 .title-text{font-size:12px;font-weight:bold;color:#333;}
 .mode-btn{font-size:9px;padding:2px 10px;border:1px solid #888;border-radius:3px;cursor:pointer;background:#fff;font-weight:bold;}
@@ -17,8 +27,12 @@ body{font-family:sans-serif;font-size:10px;background:#e8e8e8;margin:6px;zoom: 2
 #btn-match.active {background:#e65100; color:#fff;}
 #btn-pennant {background:#4caf50; color:#fff; border-color:#388e3c;}
 #btn-pennant.active {background:#2e7d32; color:#fff;}
-.mode-panel{display:none;background-size:cover;background-position:center;background-repeat:no-repeat;}
-.mode-panel.show{display:block;}
+/* 各ゲームパネル個別を2倍ズームに設定（fixed要素に影響を及ぼさずに中身だけを拡大） */
+.mode-panel {
+  display: none; background-size: cover; background-position: center; background-repeat: no-repeat;
+  zoom: 2.0; /* ここにzoomを移動させました */
+}
+.mode-panel.show { display: block; }
 .rank{font-weight:bold; display:inline-block; text-align:center; margin-right:1px;}
 .rank-G{color:#9e9e9e;} .rank-F{color:#4fc3f7;}
 .rank-E{color:#4caf50;} .rank-D{color:#c0ca33;}
@@ -85,7 +99,11 @@ table th, table td { white-space: nowrap; overflow: hidden; text-overflow: clip;
 .pc-sv{font-size:6.5px;line-height:1.2;}
 .pc-abis{padding:1px 2px;display:flex;flex-wrap:wrap;gap:1px;min-height:8px;}
 .popup{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:none;justify-content:center;align-items:center;z-index:1000;}
-.popup-inner{background:#fff;padding:14px;width:95%;max-width:580px;max-height:88%;overflow-y:auto;border-radius:8px;position:relative;line-height:1.6;font-size:10px;}
+./* ポップアップの内枠も2倍ズームに設定 */
+.popup-inner {
+  background: #fff; padding: 14px; width: 95%; max-width: 580px; max-height: 88%; overflow-y: auto; border-radius: 8px; position: relative; line-height: 1.6; font-size: 10px;
+  zoom: 2.0; /* ここにzoomを適用して、見やすさを維持します */
+}
 .close-btn{position:absolute;top:4px;right:12px;font-size:26px;font-weight:bold;cursor:pointer;color:#aaa;}
 .order-title{font-size:13px;font-weight:bold;color:#333;margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid #333;}
 .order-sec-label{font-size:10px;font-weight:bold;color:#555;margin-bottom:4px;}
@@ -112,6 +130,7 @@ table th, table td { white-space: nowrap; overflow: hidden; text-overflow: clip;
 .c-ops{color:#006064; font-weight:900; background:#e0f7fa;}
 .c-2b{color:#e64a19;} .c-3b{color:#7b1fa2;}
 .c-war{color:#00695c; font-weight:bold;}
+.c-fp{color:#0288d1;}
 :root { --side-gap: 4px; }
 body { max-width: 100% !important; padding-left: var(--side-gap); padding-right: var(--side-gap); }
 .leader-ability-header { font-size:6px; }
@@ -124,10 +143,85 @@ body { max-width: 100% !important; padding-left: var(--side-gap); padding-right:
 .standing-5 { background-color:#e0eeff !important; }
 .standing-6 { background-color:#f0e0ff !important; }
 
-/* ログ用スタイル（スポナビ風実況デザイン） */
+/* ── [新規追加] 個人タイトル受賞者強調用（赤の太字） ── */
+.title-leader-highlight {
+  color: #ff0000 !important;
+  font-weight: 900 !important;
+}
+
+/* ログ用スタイル（スポナビ風実況デザイン・余白と見やすさを極限まで改善） */
 .log-batter-info { background-color: #e0e0e0; display: inline-block; padding: 3px 6px; border-radius: 4px; margin-bottom: 2px; color: #111; font-weight: bold; }
 .log-result { margin-left: 8px; display: inline-block; margin-bottom: 2px; }
-.log-inning-header { background-color: #d0d0d0; padding: 4px 8px; border-radius: 4px; margin: 8px 0 4px; font-weight: bold; display: block; color: #222; }
+.log-inning-header { 
+  background-color: #d0d0d0; 
+  padding: 4px 8px; 
+  border-radius: 4px; 
+  margin: 20px 0 4px; /* ★ margin-topを20pxに広げ、攻守交代の間に見やすい空白スペースを自動生成 */
+  font-weight: bold; 
+  display: block; 
+  color: #222; 
+}
+
+/* 🏆 【新規追加】ポップアップ実況ログの見切れ・✕ボタン消失を完全防止するCSS 🏆 */
+/* ★このページにはviewportの指定が無く、bodyに zoom:2.0 がかかっているため、
+   vh/vw単位で指定すると実際の画面の約2倍のサイズで描画されてしまう不具合があった。
+   position:fixed + % (パーセント)指定はこの影響を受けないため、これに変更して
+   画面の実サイズに対して正しく中央表示・高さ制限がかかるようにした。 */
+#pennant-log-popup .popup-inner {
+  position: fixed !important;  /* ★相対(relative)から固定(fixed)に変更 */
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  margin: auto !important;     /* ★top/left/right/bottomを0にしてmargin:autoで上下左右を中央に */
+  width: 86% !important;       /* ★vw→%に変更(zoomの影響を受けない) */
+  height: 70% !important;      /* ★vh→%に変更(zoomの影響を受けない) */
+  overflow-y: hidden !important; /* ★外枠自体はスクロールさせない(これが✕ボタンが流れて消える原因だった) */
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 14px !important;
+  padding-top: 36px !important; /* ★常時表示される✕ボタンと本文が重ならないよう上に余白 */
+  background: #ffffff !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+}
+#pennant-log-popup .close-btn {
+  position: absolute !important; /* ★外枠はスクロールしないので、絶対位置で右上固定でも消えない */
+  top: 8px !important;
+  right: 8px !important;
+  font-size: 20px !important;
+  font-weight: bold !important;
+  color: #888 !important;
+  cursor: pointer !important;
+  background: #fff !important;
+  width: 30px !important;
+  height: 30px !important;
+  line-height: 30px !important;
+  text-align: center !important;
+  border-radius: 50% !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+  z-index: 1010 !important; /* スクロールしても常に最前面・右上に固定 */
+}
+#pennant-log-popup .close-btn:hover { color: #333 !important; }
+#pennant-log-title {
+  flex-shrink: 0 !important; /* ★タイトルも常に上部固定表示 */
+}
+#pennant-log-score {
+  flex-shrink: 0 !important; /* ★スコアボードは本文と一緒にスクロールさせず、常に上部に固定表示 */
+  margin-bottom: 6px !important;
+  overflow-x: auto !important;
+}
+#pennant-log-content {
+  overflow-y: auto !important; /* はみ出さずに内部をスムーズにスクロール可能にする */
+  flex: 1 1 auto !important;
+  min-height: 0 !important; /* ★これが無いと内容量によって縮みきらず、上下が見切れることがある */
+  font-size: 8.5px !important; /* やや小さめにして一画面の情報量をアップ */
+  line-height: 1.6 !important;
+  background: #f9f9f9 !important;
+  padding: 8px !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+}
 
 /* ── ドラフト全体の背景を白ベースに ── */
 #panel-draft { background:#f5f5f5; color:#333; min-height:100vh; padding:6px; }
@@ -499,48 +593,105 @@ body { max-width: 100% !important; padding-left: var(--side-gap); padding-right:
 
 /* 下部メニュー全体の高さ分、bodyの下パディングを確保 */
 body {
-  padding-bottom: 70px !important;
-  padding-top: 40px !important;
+  font-family: sans-serif; font-size: 10px; background: #e8e8e8; margin: 6px;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+  max-width: 100% !important;
+  padding-left: var(--side-gap);
+  padding-right: var(--side-gap);
+  
+  /* 固定ヘッダー（高さ128px）と固定フッター（高さ160px）の重なりを防ぐ余白を設定 */
+  padding-top: 128px !important;    /* コンテンツを上部メニューの真下に押し下げます */
+  padding-bottom: 175px !important; /* コンテンツが下部メニューに隠れるのを防ぎます */
 }
 
-/* ── 上部固定ヘッダー（ゲームタイトル/ログイン/ユーザー情報） ── */
+/* ── 上部固定ヘッダー（標準サイズで完全に引き伸ばします） ── */
 .top-header {
-  position: fixed; top: 0; left: 0; width: 100%; height: 64px;
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  right: 0; /* 左右の端にしっかり固定します */
+  width: 100% !important;
+  height: 128px !important; /* 高さを等倍基準の128pxに調整 */
   background: linear-gradient(135deg, #1c2333, #2b3a55);
-  color: #fff; display: flex; align-items: center; gap: 10px; padding: 0 12px;
-  z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-  /* 親bodyのzoom:2.0を打ち消して絶対サイズで表示（下部ナビと同じ手法） */
-  zoom: 0.5;
+  color: #fff; 
+  display: flex; 
+  align-items: center; 
+  gap: 20px; 
+  padding: 0 24px;
+  z-index: 9999; 
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  box-sizing: border-box; /* パディングが幅を壊さないようにします */
 }
-.top-header-icon {
-  width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.12);
-  display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; cursor: pointer;
-}
-.top-header-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.top-header-title { font-size: 12px; font-weight: bold; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.top-header-sub { font-size: 10px; color: #cfd6e6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.top-header-login-btn {
-  font-size: 11px; font-weight: bold; padding: 7px 14px; border: none; border-radius: 14px;
-  background: #ffd54f; color: #1c2333; cursor: pointer; flex-shrink: 0;
-}
-.top-header-login-btn:active { opacity: 0.8; }
 
-/* 下部固定ナビゲーションバー */
+.top-header-icon {
+  width: 88px !important; 
+  height: 88px !important; /* 等倍での大きさに調整 */
+  border-radius: 50%; 
+  background: rgba(255,255,255,0.12);
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 44px !important; /* アイコンを大きく */
+  flex-shrink: 0; 
+  cursor: pointer;
+}
+
+.top-header-info { 
+  flex: 1; 
+  min-width: 0; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 4px; 
+}
+
+.top-header-title { 
+  font-size: 24px !important; /* タイトル文字を大きく */
+  font-weight: bold; 
+  line-height: 1.2; 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+}
+
+.top-header-sub { 
+  font-size: 20px !important; /* サブ文字を大きく */
+  color: #cfd6e6; 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+}
+
+.top-header-login-btn {
+  font-size: 22px !important; 
+  font-weight: bold; 
+  padding: 14px 28px !important; /* ボタン自体を大きく */
+  border: none; 
+  border-radius: 28px !important;
+  background: #ffd54f; 
+  color: #1c2333; 
+  cursor: pointer; 
+  flex-shrink: 0;
+}
+
+/* ── 下部固定ナビゲーションバー（拡大した中身が収まる高さに調整） ── */
 .bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
-  height: 56px;
+  right: 0; /* 左右の端にしっかり固定します */
+  width: 100% !important;
+  height: 160px !important; /* 中身の絵文字(52px)と文字(22px)が快適に収まる高さ160pxに設定 */
   background: #ffffff;
-  border-top: 1px solid #cccccc;
+  border-top: 2px solid #cccccc;
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 9999;
-  box-shadow: 0 -2px 8px rgba(0,0,0,0.12);
-  /* 親bodyのzoom: 2.0に対応する調整。環境に合わせた絶対サイズにするためzoomを1.0に戻します */
-  zoom: 0.5; 
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.12);
+  box-sizing: border-box; /* パディングが幅を壊さないようにします */
 }
 
 /* ナビゲーション各項目 */
@@ -552,30 +703,24 @@ body {
   justify-content: center;
   text-decoration: none;
   color: #555555;
-  font-size: 11px;
+  font-size: 22px !important; /* 文字がめり込まないサイズに調整 */
   height: 100%;
   border: none;
   background: none;
   cursor: pointer;
-  padding: 4px 0;
+  padding: 8px 0;
   font-family: sans-serif;
   transition: background 0.1s, color 0.1s;
 }
 
-/* 押しているカテゴリの強調表示 */
-.bottom-nav-item.active {
-  color: #1a73e8;
-  font-weight: bold;
-  background: #f1f3f4;
-}
-
 /* 将来的にPNGアイコン画像へ差し替えやすい構造の絵文字アイコン */
 .bottom-nav-icon {
-  font-size: 20px;
+  font-size: 52px !important; /* アイコンを大きく表示 */
   line-height: 1.2;
-  margin-bottom: 2px;
-  display: inline-block; /* 将来 <img> タグへ置換可能な枠 */
+  margin-bottom: 4px;
+  display: inline-block;
 }
+
 
 /* スマホ前提のカード風メニューアイテム */
 .menu-card {
@@ -659,6 +804,25 @@ body {
 }
 .home-shortcut-btn span { font-size: 18px; display: block; }
 .home-shortcut-btn:disabled { color: #aaa; cursor: not-allowed; opacity: 0.6; }
+/* ── [新規追加] 完全固定幅のペナント順位表用スタイル ── */
+.pennant-standings-table {
+  table-layout: fixed !important;
+  width: 100% !important;
+  border-collapse: collapse;
+}
+.pennant-standings-table th, .pennant-standings-table td {
+  padding: 1px 1px !important; /* セル内の余白を小さく */
+  font-size: 6.5px !important;  /* 順位、勝、敗、勝率以外は文字を少し小さく */
+  text-align: center !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 重要項目（順位、チーム、勝、敗、勝率）は元のサイズで強調 */
+.pennant-standings-table .pst-main {
+  font-size: 8px !important;
+  font-weight: bold !important;
+}
 </style>
 </head>
 <body>
@@ -684,9 +848,13 @@ body {
     <span class="home-banner-text" id="home-announce-placeholder">お知らせ</span>
   </div>
 
-  <!-- 🌐 全国対戦 結果（現在は仮の値。実装後はサーバー値で renderOnlineResultCard() を更新する想定） -->
+<!-- 🌐 全国対戦 結果（現在は仮の値。実装後はサーバー値で renderOnlineResultCard() を更新する想定） -->
   <div class="home-card">
-    <div class="home-card-title">🌐 全国対戦 結果</div>
+    <!-- タイトルとボタンを横並びにするフレックスボックス形式に変更しました -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+      <div class="home-card-title" style="margin-bottom:0;">🌐 全国対戦 結果</div>
+      <button class="home-order-load-btn" onclick="switchMode('online-match')">全国対戦へ</button>
+    </div>
     <div class="home-online-summary">
       <span id="home-online-term">1期</span>
       <span id="home-online-games">0試合終了</span>
@@ -791,10 +959,10 @@ body {
     <button class="menu-card-btn" onclick="switchMode('pennant')" style="background:#4caf50;">ペナントを開始する</button>
   </div>
 
-  <div class="menu-card">
-    <div class="menu-card-title">🌐 全国オンライン対戦 (未実装)</div>
+  <div class="menu-card" style="border-top: 3px solid #1a73e8;"> <!-- テーマカラーの青枠線を追加 -->
+    <div class="menu-card-title">🌐 全国オンライン対戦</div> 
     <div class="menu-card-desc">全国のプレイヤーと対戦！最強のオリジナルチームで上位ランキングを目指します。</div>
-    <button class="menu-card-btn" disabled>全国対戦マッチへ</button>
+    <button class="menu-card-btn" onclick="switchMode('online-match')">全国対戦マッチへ</button>
   </div>
   
   <div class="menu-card">
@@ -978,7 +1146,6 @@ body {
   <div class="team-sec" id="sec-bench" style="display:none; margin-top:5px;">控え・ベンチ</div>
   <div class="cards-row" id="row-bench" style="display:flex; flex-wrap:wrap; gap:2px; margin-bottom:2px;"></div>
 </div>
-</div>
 
 <div id="panel-match" class="mode-panel">
   <div class="order-title">⚔️ ソロ対戦モード</div>
@@ -1006,29 +1173,112 @@ body {
   <div id="match-log" style="background:#fff; border:1px solid #ccc; border-radius:4px; height:180px; overflow-y:scroll; padding:6px; font-size:10px; line-height:1.8;"></div>
   <div id="match-teams-info" style="margin-top:10px;"></div>
 </div>
+
+<!-- 🌐 新設：全国オンライン対戦のメイン画面（最初は非表示） -->
+<div id="panel-online-match" class="mode-panel">
+  <div class="order-title">🌐 全国オンライン対戦</div>
+  
+  <!-- 🌐 ホーム画面と完全に中身・構造が同じ「全国対戦 結果」カードを配置 -->
+  <div class="home-card">
+    <div class="home-card-title" style="margin-bottom:6px;">🌐 全国対戦 結果</div>
+    <div class="home-online-summary">
+      <span id="online-match-term">1期</span>
+      <span id="online-match-games">0試合終了</span>
+      <span id="online-match-rank">-位/-人中</span>
+    </div>
+    <div class="home-online-wld">
+      <span id="online-match-win">0勝</span>
+      <span id="online-match-lose">0敗</span>
+      <span id="online-match-draw">0分</span>
+    </div>
+  </div>
+
+  <!-- 🌟🏆🥇 要望のあった3つのボタンをカード状に配置（動作は後ほど実装） -->
+  <div class="menu-card">
+    <div class="menu-card-title">⚙️ 対戦メニュー</div>
+    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+      <button class="menu-card-btn" style="background:#1a73e8; font-size:11px; padding:8px 0;" onclick="alert('オーダー登録は準備中です')">🌟 オーダー登録</button>
+      <button class="menu-card-btn" style="background:#4caf50; font-size:11px; padding:8px 0;" onclick="alert('順位表は準備中です')">🏆 順位表</button>
+      <button class="menu-card-btn" style="background:#ff9800; font-size:11px; padding:8px 0;" onclick="alert('個人成績は準備中です')">🥇 個人成績</button>
+    </div>
+  </div>
+
+  <!-- 前のメニューに戻るためのボタン -->
+  <button class="restart-btn" onclick="switchMode('nav-game')" style="background:#555; width:100%; padding:10px 0; font-weight:bold;">⚔️ 対戦メニューに戻る</button>
+</div>
+
 <script type="application/json" id="cpu-team-data">
 []
 </script>
 
 <div id="panel-pennant" class="mode-panel">
   <div class="order-title">🏆 ペナントモード</div>
-  <div id="pennant-setup" style="margin-bottom:10px;">
+<div id="pennant-setup" style="margin-bottom:10px;">
     <p>保存されたチームから6チームを選んで140試合のペナントレースを行います。</p>
     <div id="team-selects"></div>
     <button class="order-confirm-btn" onclick="startPennant()" style="background:#4caf50; margin-top:10px;">ペナント開始</button>
-  </div>
+    <!-- 🏆 準備画面用の1/4進行ボタンを追加 -->
+    <button class="order-confirm-btn" onclick="startPennantStep()" style="background:#ff9800; margin-top:10px; margin-left:5px;">1/4ずつ進行</button>
+  </div> <!-- ★ 閉じタグを1つに減らし、結果画面(pennant-results)をペナントパネルの内部に収めます -->
   <div id="pennant-results" style="display:none;">
     <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
       <button class="restart-btn" onclick="startPennant()" style="background:#1976d2;">もう一回</button>
+      <!-- 🏆 1/4進行ボタンを配置 -->
+      <button id="pennant-step-next-btn" class="restart-btn" onclick="nextPennantStep()" style="background:#ff9800; margin-left:5px;">1/4ずつ進行</button>
       <div id="league-avg-stats" style="font-size:7px; background:#fff; padding:4px 8px; border:1px solid #ccc; border-radius:4px;"></div>
     </div>
     <div id="pennant-standings" style="margin-bottom:10px;"></div>
-    <div id="pennant-leaders" style="margin-bottom:10px;"></div>
-    <div id="pennant-order-select" style="margin-bottom:10px;"></div>
-    <div id="pennant-order-display" style="margin-bottom:10px;"></div>
+
+    <!-- 🏆 【新規追加】ペナント試合結果一覧セクション（順位表の少し下に配置） 🏆 -->
+    <div style="margin-bottom:12px; background:#fff; border:1px solid #ccc; border-radius:6px; padding:8px;">
+      <div style="font-size:10px; font-weight:bold; margin-bottom:4px; color:#f57c00;">📅 ペナントレース試合結果</div>
+      <div style="margin-bottom:6px;">
+        <select id="pennant-result-select" onchange="renderPennantMatchResults()" style="font-size:8.5px; padding:1px 5px; border:1px solid #aaa; border-radius:3px; cursor:pointer; width:100%;">
+          <option value="featured">注目ゲーム (開幕・36・71・最終戦)</option>
+          <option value="r1_35">第1試合 〜 第35試合</option>
+          <option value="r36_70">第36試合 〜 第70試合</option>
+          <option value="r71_105">第71試合 〜 第105試合</option>
+          <option value="r106_140">第106試合 〜 第140試合</option>
+        </select>
+      </div>
+      <div id="pennant-match-results-display" style="font-size:8px;"></div>
+    </div>
+    
+    <!-- 🏆 リーグ個人表彰・タイトル一覧セクション 🏆 -->
+    <div id="pennant-awards-section" style="margin-bottom:12px; background:#fff; border:1px solid #ccc; border-radius:6px; padding:8px;">
+      <div style="font-size:10px; font-weight:bold; margin-bottom:4px; color:#1a73e8;">🏆 リーグ表彰・タイトル一覧</div>
+      <div style="margin-bottom:6px;">
+        <select id="pennant-awards-select" onchange="window.renderAwards()" style="font-size:8.5px; padding:1px 5px; border:1px solid #aaa; border-radius:3px; cursor:pointer; width:100%;">
+          <option value="MVP_B9">MVP & ベストナイン</option>
+          <option value="BATTER_TITLES">打撃タイトル</option>
+          <option value="PITCHER_TITLES">投手タイトル</option>
+          <option value="GOLDEN_GLOVE">ゴールデングラブ</option>
+          <option value="GREAT_RECORDS">🌟 大記録</option>
+        </select>
+      </div>
+      <div id="pennant-awards-display" style="font-size:8px;"></div>
+    </div>
+
+    <!-- 📊 個人成績ランキングセクション 📊 -->
+    <div style="margin-bottom:12px; background:#fff; border:1px solid #ccc; border-radius:6px; padding:8px;">
+      <div style="font-size:10px; font-weight:bold; margin-bottom:4px; color:#2e7d32;">📊 個人成績ランキング</div>
+      <div id="pennant-leaders" style="margin-bottom:4px;"></div>
+    </div>
+
+    <!-- 👥 チーム別最終成績・オーダーセクション 👥 -->
+    <div style="margin-bottom:12px; background:#fff; border:1px solid #ccc; border-radius:6px; padding:8px;">
+      <div style="font-size:10px; font-weight:bold; margin-bottom:4px; color:#ab47bc;">👥 チーム別最終成績・オーダー</div>
+      <div id="pennant-order-select" style="margin-bottom:6px;"></div>
+      
+      <!-- 🏆 【新規追加】チーム全体の累積スタッツ表示コンテナ 🏆 -->
+      <div id="pennant-team-stats-summary" style="margin-bottom:8px;"></div>
+      
+      <div id="pennant-order-display"></div>
+    </div>
+    
     <button class="restart-btn" onclick="resetPennant()">リセット</button>
   </div>
-</div>
+  </div>
 
 <div id="panel-order" class="mode-panel">
   <div class="order-title">📋 オーダー設定</div>
@@ -1057,17 +1307,18 @@ body {
   </div>
   <button class="order-confirm-btn" onclick="confirmOrder()">オーダー確定</button>
 </div>
+</div>
 
 <div id="panel-edit" class="mode-panel">
   <div class="order-title">
     ✍ チームEDIT 
     <input type="text" id="edit-team-name" value="マイチーム" style="margin-left:10px; font-size:12px; padding:2px 5px; width:140px;">
-    <button class="sm-btn" style="margin-left:10px;" onclick="('edit')">チーム読込</button>
+    <button class="sm-btn" style="margin-left:10px;" onclick="showLoadPopup('edit')">チーム読込</button>
     <button class="sm-btn" style="background:#e53935;" onclick="toggleEditReset()">リセット</button>
     <span class="bulk-change-area">
       <button class="sm-btn" onclick="toggleBulkChange()">一括変更</button>
     </span>
-  </div>
+  </div> <!-- ★ order-title を適切に閉じる div を追加 -->
   
   <div id="edit-reset-area" style="display:none; margin-bottom:10px; background:#fff; padding:6px; border:1px solid #ccc; font-size:10px;">
     <label><input type="checkbox" id="reset-name" checked>名前</label>
@@ -1109,7 +1360,7 @@ body {
     <div id="edit-pitcher-assign-ui" style="margin-bottom:8px;"></div>
     <div class="order-warn" id="edit-order-warn" style="margin-bottom:6px;"></div>
     <table class="order-table">
-      <colgroup><col style="width:10%;"><col style="width:9%;"><col style="width:16%;"><col style="width:9%;"><col style="width:9%;"><col style="width:9%;"><col style="width:9%;"><col style="width:9%;"><col style="width:auto;"></colgroup>
+      <colgroup><col style="width:10%;"><col style="width:9%;"><col style="width:16%;"><col style="width:8%;"><col style="width:8%;"><col style="width:8%;"><col style="width:8%;"><col style="width:8%;"><col style="width:auto;"></colgroup>
       <thead><tr><th>予定/回</th><th>利き</th><th>選手</th><th>速</th><th>威</th><th>変</th><th>制</th><th>体</th><th>特能(カンマ)</th></tr></thead>
       <tbody id="edit-pitcher-tbody"></tbody>
     </table>
@@ -1145,6 +1396,20 @@ body {
 function valFmt(v) { return v >= 100 ? `<span style="font-size:6px;letter-spacing:-0.5px;">${v}</span>` : v; }
 function rankFmt(r, c) { return `<span class="rank rank-${c}" style="font-size:${r.length>1?'6px':'7.5px'}; letter-spacing:${r.length>1?'-1px':'-0.5px'};">${r}</span>`; }
 
+// 🏆 【新規追加】初期化エラー・Not Definedエラーを100%防止する安全定義
+var leagueTitleHolders = {};
+function checkAndHighlight(player, type, value, displayStr) {
+  if (window.leagueTitleHolders && window.leagueTitleHolders[type]) {
+    let holders = window.leagueTitleHolders[type].players || [];
+    let isHolder = holders.some(h => h.name === player.name && h.teamName === player.teamName);
+    if (isHolder) {
+      return `<span class="title-leader-highlight">${displayStr}</span>`;
+    }
+  }
+  return displayStr;
+}
+window.checkAndHighlight = checkAndHighlight;
+
 const RESULT_COLGROUP = `
   <colgroup>
     <col style="width:8%;">
@@ -1156,43 +1421,174 @@ const RESULT_COLGROUP = `
 `;
 const MATCH_COLGROUP_BATTER = `
   <colgroup>
-    <col style="width:6%;">
-    <col style="width:5%;">
-    <col style="width:10%;">
-    <col style="width:4%;"><col style="width:4%;"><col style="width:4%;"><col style="width:4%;"><col style="width:4%;">
-    <col style="width:4%;"><col style="width:3%;"><col style="width:3%;"><col style="width:3%;"><col style="width:3%;">
-    <col style="width:3%;"><col style="width:3%;"><col style="width:3%;"><col style="width:3%;">
-    <col style="width:4%;"><col style="width:5%;"><col style="width:5%;">
+    <col style="width:7%;">   <!-- 総合 -->
+    <col style="width:6%;">   <!-- 打/守 -->
+    <col style="width:13%;">  <!-- 名前 -->
+    <col style="width:4%;"><col style="width:4%;"><col style="width:4%;"><col style="width:4%;"><col style="width:4%;"> <!-- ミ・パ・走・肩・守 -->
+    <col style="width:5%;">   <!-- 率 -->
+    <col style="width:4%;"><col style="width:4%;"> <!-- 本・点 -->
+    <col style="width:4%;"><col style="width:4%;"><col style="width:4%;"><col style="width:4%;"> <!-- 盗・守・失・走 -->
+    <col style="width:4%;">   <!-- 得 -->
+    <col style="width:5%;">   <!-- 出 -->
+    <col style="width:6%;">   <!-- OPS -->
+    <col style="width:6%;">   <!-- wRC+ -->
   </colgroup>
 `;
-// ── [修正] 投手能力欄のズレを防ぐため、役割を5%、名前を10%に変更し、野手と統一 ──
+// ── 野手と完全に横幅・列数を揃えた新レイアウト ──
 const MATCH_COLGROUP_PITCHER = `
   <colgroup>
-    <col style="width:6%;">
-    <col style="width:5%;">
-    <col style="width:10%;">
-    <col style="width:4%;"><col style="width:4%;"><col style="width:4%;"><col style="width:4%;"><col style="width:4%;">
-    <col style="width:4%;"><col style="width:3%;"><col style="width:3%;"><col style="width:3%;">
-    <col style="width:3%;"><col style="width:3%;"><col style="width:3%;"><col style="width:3%;"><col style="width:3%;">
-    <col style="width:4%;">
+    <col style="width:7%;">   <!-- 総合 (野手と統一) -->
+    <col style="width:6%;">   <!-- 役割 (野手と統一) -->
+    <col style="width:13%;">  <!-- 名前 (野手と統一) -->
+    <col style="width:4%;"><col style="width:4%;"><col style="width:4%;"><col style="width:4%;"><col style="width:4%;"> <!-- ステータス5列 (各4%で野手と統一) -->
+    <col style="width:5%;">   <!-- 防 -->
+    <col style="width:4%;"><col style="width:4%;"><col style="width:4%;"><col style="width:4%;"><col style="width:4%;"> <!-- 回・振・被打・与四・WHIP -->
+    <col style="width:5%;">   <!-- 勝敗 -->
+    <col style="width:5%;"><col style="width:5%;"> <!-- HD・SV -->
+    <col style="width:10%;">  <!-- FIP -->
   </colgroup>
 `;
+const PENNANT_AWARD_COLGROUP_BATTER = `
+  <colgroup>
+    <col style="width:14%;"><col style="width:6%;"><col style="width:13%;">
+    <col style="width:6%;">
+    <col style="width:6%;"><col style="width:6%;">
+    <col style="width:6%;"><col style="width:6%;"><col style="width:6%;"><col style="width:6%;">
+    <col style="width:5%;">
+    <col style="width:6%;"><col style="width:7%;"><col style="width:7%;">
+  </colgroup>
+`;
+const PENNANT_AWARD_COLGROUP_PITCHER = `
+  <colgroup>
+    <col style="width:17%;"><col style="width:7%;"><col style="width:14%;">
+    <col style="width:6%;"><col style="width:6%;"><col style="width:6%;">
+    <col style="width:6%;"><col style="width:6%;"><col style="width:6%;">
+    <col style="width:7%;"><col style="width:6%;"><col style="width:6%;"><col style="width:7%;">
+  </colgroup>
+`;
+const AWARD_THEAD_BATTER = `<thead><tr>
+  <th style="color:#ffa;">表彰</th><th>打/守</th><th>名前</th>
+  <th class="c-rate">率</th><th class="c-hr">本</th><th class="c-rbi">点</th>
+  <th class="c-sb">盗</th><th class="c-def">守</th><th class="c-def">失</th><th class="c-sb">走</th>
+  <th class="c-rbi">得</th><th class="c-rate">出</th><th class="c-ops">OPS</th><th class="c-war">wRC+</th>
+</tr></thead>`;
+const AWARD_THEAD_PITCHER = `<thead><tr>
+  <th style="color:#ffa;">表彰</th><th>役割</th><th>名前</th>
+  <th class="c-rate">防</th><th class="c-rbi">回</th><th class="c-hr">振</th>
+  <th class="c-def">被打</th><th class="c-sb">与四</th><th class="c-def">WHIP</th>
+  <th class="c-hr">勝敗</th><th class="c-2b">HD</th><th class="c-3b">SV</th><th class="c-ops">FIP</th>
+</tr></thead>`;
+// ↑↑↑ ここまで新規追加 ↑↑↑
 
 let ENABLE_MATCH_LOG = false;
 
 function clamp(min, max, val) { return Math.max(min, Math.min(max, val)); }
+
+// 🌐 【追加】ポジションの英略称から、その時点での守備側の実名を取り出すヘルパー
+function getFielderByPosName(defenseTeam, posName) {
+  let mapping = {
+    "ピッチャー": "投", "投": "投",
+    "キャッチャー": "捕", "捕": "捕",
+    "一塁": "一", "一": "一",
+    "二塁": "二", "二": "二",
+    "三塁": "三", "三": "三",
+    "遊撃": "遊", "遊": "遊",
+    "レフト": "左", "左": "左",
+    "センター": "中", "中": "中",
+    "ライト": "右", "右": "右"
+  };
+  let code = mapping[posName];
+  if (!code || !defenseTeam) return null;
+  return defenseTeam.batters.find(b => b.defPos === code);
+}
+
+// 🌐 【追加】守備位置の表示名をスポナビ風の日本語に翻訳するヘルパー
+function getPosJpName(posName) {
+  let mapping = {
+    "ピッチャー": "ピッチャー", "投": "ピッチャー",
+    "キャッチャー": "キャッチャー", "捕": "キャッチャー",
+    "一塁": "ファースト", "一": "ファースト",
+    "二塁": "セカンド", "二": "セカンド",
+    "三塁": "サード", "三": "サード",
+    "遊撃": "ショート", "遊": "ショート",
+    "レフト": "レフト", "左": "レフト",
+    "センター": "センター", "中": "センター",
+    "ライト": "ライト", "right": "ライト", "右": "ライト"
+  };
+  return mapping[posName] || posName;
+}
+
 function showHelp() { document.getElementById('helpPopup').style.display = 'flex'; }
 function hideHelp() { document.getElementById('helpPopup').style.display = 'none'; }
 
-function randName(){
-  const list =["佐藤","鈴木","高橋","田中","伊藤","渡辺","山本","中村","小林","加藤",
-"吉田","山田","佐々木","山口","松本","井上","木村","林","清水","斎藤",
-"池田","橋本","阿部","石川","山崎","中島","前田","藤田","後藤","岡田",
-"長谷川","村上","近藤","石井","遠藤","青木","坂本","西村","藤井","福田",
-"太田","三浦","藤原","岡本","松田","中野","原田","小川","藤本","竹内",
-"金子","和田","中川","森","石田","上田","原","柴田","酒井","工藤",
-"横山","宮崎","宮本","内田","高木","安藤","島田","谷口","大野","丸山"];
-  return list[Math.floor(Math.random()*list.length)];
+// 名前データの初期状態（フォールバック用も兼ねる）
+let playerNames = {
+  japanese: [
+    "佐藤","鈴木","高橋","田中","伊藤","渡辺","山本","中村","小林","加藤",
+    "吉田","山田","佐々木","山口","松本","井上","木村","林","清水","斎藤",
+    "池田","橋本","阿部","石川","山崎","中島","前田","藤田","後藤","岡田",
+    "長谷川","村上","近藤","石井","遠藤","青木","坂本","西村","藤井","福田",
+    "太田","三浦","藤原","岡本","松田","中野","原田","小川","藤本","竹内",
+    "金子","和田","中川","森","石田","上田","原","柴田","酒井","工藤",
+    "横山","宮崎","宮本","内田","高木","安藤","島田","谷口","大野","丸山"
+  ],
+  foreigner: [
+    "ローズ","マートン","バレンティン","ラミレス","ウッズ","クロマティ","ペタジーニ",
+    "ビシエド","メッセンジャー","マイコラス","サファテ","オスナ","グリエル","ソト","ポランコ",
+    "アブレイユ","サンタナ","ゴンザレス","シーツ","シピン","ゲレーロ","ディザイア"
+  ]
+};
+
+// 状況に応じて名前を抽選する関数
+function getPlayerNameByContext(context) {
+  let isForeigner = false;
+  const rand = Math.random();
+
+  if (context === "foreigner") {
+    isForeigner = true; // 外国人補強：100% 外国人
+  } else if (context === "released") {
+    isForeigner = rand < 0.10; // 戦力外選手：10% で外国人
+  } else if (context === "draft") {
+    isForeigner = rand < 0.02; // ドラフト選手：2% で外国人
+  } else {
+    isForeigner = false; // 初期・デフォルト・CPU選手などは100% 日本人
+  }
+
+  const list = isForeigner ? playerNames.foreigner : playerNames.japanese;
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+// 🌐 外部（GitHub）から名前ファイルを非同期で読み込み、現在の名簿へ結合する関数
+async function loadExternalNames() {
+  const url = "https://cdn.jsdelivr.net/gh/yakisoba1229/yyotest@main/names.json";
+  
+  try {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 3000); // 3秒応答がなければタイムアウト
+    
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(id);
+
+    if (!response.ok) {
+      throw new Error(`HTTPエラー Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    // 正しいデータ形式であれば、現在のローカル名簿に「追加・結合（重複は自動カット）」します
+    if (data) {
+      if (Array.isArray(data.japanese)) {
+        playerNames.japanese = Array.from(new Set(playerNames.japanese.concat(data.japanese)));
+      }
+      if (Array.isArray(data.foreigner)) {
+        playerNames.foreigner = Array.from(new Set(playerNames.foreigner.concat(data.foreigner)));
+      }
+      console.log("外部名前データをローカル名簿へ正常に結合しました。");
+    }
+  } catch (error) {
+    // 読み込みエラー、オフライン時、JSONの文法エラー時はローカル初期名簿でそのまま動作
+    console.warn("外部名前データの取得に失敗したため、内蔵名簿のみを使用します:", error.message);
+  }
 }
 
 const ABI_GROUPS={
@@ -1371,23 +1767,21 @@ function posCls(p){
 let matchMyTeam = null, matchRivalTeam = null;
 let isRandomTeamMode = true; 
 let myTeamName = "マイチーム"; 
+let matchResults = null; // ★ソロ対戦終了時のマージ成績を一時保持する変数
 // TODO: 下部メニューの大枠とサブ機能を同期させるためのグローバル変数
 let currentMode = "nav-home"; 
 
 /* 各画面の背景画像（外部ファイル化の準備）。パスを入れるだけで反映、空文字なら背景なし */
 const SCREEN_BACKGROUNDS = {
-  'panel-nav-home': 'https://cdn.jsdelivr.net/gh/yakisoba1229/yyotest@main/bg_home.jpg', 'panel-nav-team': '', 'panel-nav-scout': '', 'panel-nav-game': '',
-  'panel-nav-rule': '', 'panel-nav-shop': '', 'panel-nav-records': '', 'panel-nav-other': '',
+  'panel-nav-home': 'https://cdn.jsdelivr.net/gh/yakisoba1229/yyotest@main/images/bg_home.jpg', 'panel-nav-team': '', 'panel-nav-scout': '', 'panel-nav-game': '',
+  'panel-nav-rule': '', 'panel-nav-shop': '', 'panel-nav-records': '', 'panel-nav-other': 'https://cdn.jsdelivr.net/gh/yakisoba1229/yyotest@main/images/bg_other.jpg',
   'panel-team': '', 'panel-match': '', 'panel-pennant': '', 'panel-order': '',
   'panel-edit': '', 'panel-result': '', 'panel-draft': '', 'panel-reinforce': ''
 };
 function applyScreenBackgrounds(){
-  Object.keys(SCREEN_BACKGROUNDS).forEach(id => {
-    const el = document.getElementById(id);
-    if(!el) return;
-    const url = SCREEN_BACKGROUNDS[id];
-    el.style.backgroundImage = url ? `url("${url}")` : 'none';
-  });
+  // 読み込み時は現在のモードの背景をボディへ適用します
+  const initialBg = SCREEN_BACKGROUNDS['panel-' + currentMode];
+  document.body.style.backgroundImage = initialBg ? `url("${initialBg}")` : 'none';
 }
 
 let announceBannerUrl = "";
@@ -1413,12 +1807,22 @@ function renderHomeHeader(){
 let onlineResult = { term: 1, gamesDone: 0, rank: 0, totalTeams: 0, win: 0, lose: 0, draw: 0 };
 function renderOnlineResultCard(){
   const set = (id, text) => { const el = document.getElementById(id); if(el) el.textContent = text; };
+  
+  // 📋 1. ホーム画面側のカードを更新
   set('home-online-term',  `${onlineResult.term}期`);
   set('home-online-games', `${onlineResult.gamesDone}試合終了`);
   set('home-online-rank',  `${onlineResult.rank || '-'}位/${onlineResult.totalTeams || '-'}人中`);
   set('home-online-win',   `${onlineResult.win}勝`);
   set('home-online-lose',  `${onlineResult.lose}敗`);
   set('home-online-draw',  `${onlineResult.draw}分`);
+
+  // 📋 2. 新設した全国オンライン対戦画面側のカードも全く同じデータで同期更新
+  set('online-match-term',  `${onlineResult.term}期`);
+  set('online-match-games', `${onlineResult.gamesDone}試合終了`);
+  set('online-match-rank',  `${onlineResult.rank || '-'}位/${onlineResult.totalTeams || '-'}人中`);
+  set('online-match-win',   `${onlineResult.win}勝`);
+  set('online-match-lose',  `${onlineResult.lose}敗`);
+  set('online-match-draw',  `${onlineResult.draw}分`);
 }
 
 applyScreenBackgrounds();
@@ -1436,10 +1840,14 @@ function switchMode(m){
   
   currentMode = m; // 現在のモードを更新
 
-  // 画面の非表示・表示切替 ( panel-nav-xxx または既存 panel-xxx どちらも正しく判定)
+  // 画面の非表示・表示切替
   document.querySelectorAll('.mode-panel').forEach(p=>{ p.className = 'mode-panel'; });
   const panel = document.getElementById('panel-' + m);
   if(panel){ panel.className = 'mode-panel show'; }
+
+  // 【修正】背景画像を常にボディ（画面全体）へ適用して引き伸ばす
+  const bgUrl = SCREEN_BACKGROUNDS['panel-' + m];
+  document.body.style.backgroundImage = bgUrl ? `url("${bgUrl}")` : 'none';
   
   // ※削除された旧上部タブ用のボタンDOMは存在する場合のみクラス名を付与するよう安全処理へ変更
   const oldButtons = ['btn-solo', 'btn-team', 'btn-match', 'btn-edit', 'btn-pennant', 'btn-draft', 'btn-reinforce'];
@@ -1459,9 +1867,9 @@ function switchMode(m){
     navTarget = m;
   } else if (['order', 'edit', 'team'].includes(m)) {
     navTarget = 'nav-team'; // チーム編成タブと連動
-  } else if (['draft', 'reinforce'].includes(m)) {
+} else if (['draft', 'reinforce'].includes(m)) {
     navTarget = 'nav-scout'; // 選手獲得タブと連動
-  } else if (['match', 'pennant', 'result'].includes(m)) {
+  } else if (['match', 'pennant', 'result', 'online-match'].includes(m)) { // online-matchを追加
     navTarget = 'nav-game'; // 対戦タブと連動
   } else {
     navTarget = 'nav-home';
@@ -1748,18 +2156,22 @@ function mkFielder(fixPos, guarantees = []) {
   let s = Array.from({length:5}, () => randStatCentered());
   // 最低保証：その能力が保証値未満なら保証付き三角分布で再生成
   guarantees.forEach(([idx, minVal]) => { if (s[idx] < minVal) s[idx] = randStatGuaranteed(minVal); });
-  let o = { name: randName(), bat, pos, s, g:[0,0,0,0,0], aw:[false,false,false,false,false], p:randPot(), pchg:0, prv:false, abi:{} };
+  let o = { name: getPlayerNameByContext("standard"), bat, pos, s, g:[0,0,0,0,0], aw:[false,false,false,false,false], p:randPot(), pchg:0, prv:false, abi:{} };
   updateAbi(o.abi,"F"); return o;
 }
 
 function mkPitcher(){
   let bat = Math.random() < 0.5 ? "R" : "L"; 
-  let o = { name: randName(), bat, s:[ randInitSpeed(), randStatCentered(), randStatCentered(), randStatCentered(), randStatCentered() ], g:[0,0,0,0,0], aw:[false,false,false,false,false], p: randPot(), pchg: 0, prv: false, abi: {} };
+  let o = { name: getPlayerNameByContext("standard"), bat, s:[ randInitSpeed(), randStatCentered(), randStatCentered(), randStatCentered(), randStatCentered() ], g:[0,0,0,0,0], aw:[false,false,false,false,false], p: randPot(), pchg: 0, prv: false, abi: {} };
   updateAbi(o.abi, "P"); return o;
 }
-const ri=n=>Math.floor(Math.random()*n);
-const cl=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
-const tri=(lo,hi)=>{const r=(Math.random()+Math.random()+Math.random())/3;return Math.round(lo+r*(hi-lo));};
+// 安全なホイスティング（巻き上げ）に対応した通常の function 宣言に変更
+function ri(n) { return Math.floor(Math.random() * n); }
+function cl(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function tri(lo, hi) {
+  const r = (Math.random() + Math.random() + Math.random()) / 3;
+  return Math.round(lo + r * (hi - lo));
+}
 const noise=(v,d=10)=>cl(v+Math.round((Math.random()-.5)*d*2),1,120);
 // 【変更後】（最低値をtarget-20で下限保証し極端な低下を防ぐ）
 function genCtrlStats(target,n){
@@ -1882,7 +2294,7 @@ function genPlayer(posType,tierKey){
 
   return{
     id:Math.random().toString(36).substr(2,9),
-    name:randName(),posType,tierKey,draftRound:null,
+    name:getPlayerNameByContext("draft"),posType,tierKey,draftRound:null,
     isGenius,awk,gBonus,ab,
     aS,pS,pAvg,aAvg,
     abi:abiObj,
@@ -1990,7 +2402,7 @@ function teamReset(){
   
   // 野手9名（スタメンのみ、控えなし）: 全て40（E）、特能なし
   tF = FPOS.map((pos, i) => ({
-    name: randName(),
+    name: getPlayerNameByContext("standard"),
     bat: Math.random() < 0.48 ? "R" : Math.random() < 0.96 ? "L" : "S",
     pos: pos === null ? "内野" : pos,
     s: [40, 40, 40, 40, 40],
@@ -2002,7 +2414,7 @@ function teamReset(){
   
   // 投手5名（スタメンのみ、控えなし）: 球速140（E）、他全て40（E）、特能なし
   tP = Array.from({length:5}, () => ({
-    name: randName(),
+    name: getPlayerNameByContext("standard"),
     bat: Math.random() < 0.5 ? "R" : "L",
     s: [140, 40, 40, 40, 40],
     g: [0, 0, 0, 0, 0],
@@ -4033,6 +4445,7 @@ function simulateAtBat(batter, pitcher, defenseTeam, gameState) {
     // 変更前（r2で方向を決めていた部分、約1604〜1636行目）を以下に差し替え
 
 let isG, dir;
+let isLinerType = false; // ★「ライナー・強い打球」由来かどうか(内野方向の長打を現実的な頻度に絞るために使う)
 if (r2 < 0.43) {
   // ゴロ（43%）→ 内野のみ
   isG = true;
@@ -4053,6 +4466,7 @@ if (r2 < 0.43) {
 } else if (r2 < 0.88) {
   // ライナー・強い打球（15%）→ 外野ギャップ中心
   isG = false;
+  isLinerType = true;
   let r3 = Math.random();
   if      (r3 < 0.35) dir = "センター";
   else if (r3 < 0.62) dir = "レフト";
@@ -4098,16 +4512,22 @@ if (r2 < 0.43) {
     let selfBonus = Math.max(0, (softPower - 40) * 0.002);
     let hrProp = clamp(0.008, 0.55, 0.07 + cappedDiff + selfBonus);
     
-    let tripleProp = clamp(0.01, 0.10, 0.015 + (batter.speed - 50) * 0.001);
-    let doubleProp = clamp(0.05, 0.35, 0.150 + (batter.power * 0.4 + batter.speed * 0.3 + batter.meet * 0.3 - 50) * 0.002);
+    // ★キャッチャー・ピッチャーへの打球は極端に浅い位置なので、長打(二塁打・三塁打)には絶対にならない
+    let isVeryShallow = (dir === "キャッチャー" || dir === "ピッチャー");
+    // ★内野方向(一塁/二塁/三塁/遊撃)の長打は、現実的にはほぼ「強いライナーが守備の脇を抜けた」場合のみ。
+    // 通常のゴロや内野ポップからは長打にならないようにする(外野方向は従来どおり)
+    let isInfieldDir = ["一塁","二塁","三塁","遊撃"].includes(dir);
+    let infieldXbhOk = !isInfieldDir || isLinerType;
+    let tripleProp = (isVeryShallow || !infieldXbhOk) ? 0 : clamp(0.01, 0.10, 0.015 + (batter.speed - 50) * 0.001);
+    let doubleProp = (isVeryShallow || !infieldXbhOk) ? 0 : clamp(0.05, 0.35, 0.150 + (batter.power * 0.4 + batter.speed * 0.3 + batter.meet * 0.3 - 50) * 0.002);
     
     let innerR = Math.random();
     if (innerR < hrProp) {
       let hrDir = ["レフト", "センター", "ライト", "バックスクリーン"][Math.floor(Math.random() * 4)];
       return { type: "本塁打", desc: "", isGrounder: false, dir: hrDir };
     }
-    else if (innerR < hrProp + tripleProp) return { type: "三塁打", desc: "", isGrounder: false, dir: dir };
-    else if (innerR < hrProp + tripleProp + doubleProp) return { type: "長打", desc: "", isGrounder: false, dir: dir };
+    else if (innerR < hrProp + tripleProp) return { type: "三塁打", desc: "", isGrounder: false, dir: dir, isLiner: isLinerType };
+    else if (innerR < hrProp + tripleProp + doubleProp) return { type: "長打", desc: "", isGrounder: false, dir: dir, isLiner: isLinerType };
     else {
       if (isG) {
         let ifhRate = clamp(0, 0.40, (batter.speed - 50) * 0.008);
@@ -4128,20 +4548,194 @@ if (r2 < 0.43) {
   }
 }
 
-// 新（関数全体の置き換え）
-function advanceRunners(bases, hitBase, tObj, defAvg, isHit, offStats) {
-  // スポナビ風・愉快な好走塁テキスト
-  const GOOD_RUNNING_TEXTS = [
-    "が相手守備の一瞬の隙を突き、一気に三塁を蹴って生還！神走塁！",
-    "がベースを綺麗に回り、間一髪セーフ！積極的な素晴らしいベースランニング！",
-    "が自慢の快足を飛ばして一気にホームへ突入！ダイヤモンドを疾走する！"
-  ];
+/* ============================================================
+   🌟 実況フレーバーテキスト・エンジン 🌟
+   「ライトフライ」「セカンドゴロ」のような基本テキストは生成ロジック側はそのまま。
+   ここでは、その後に追加される「臨場感を上げるおまけの一言」だけを
+   結果別(9種類)×状況タグ(イニング・点差)で管理する。
 
+   ・エラー／好守備／盗塁阻止 は文章を完成させる必須パーツなので、必ず1つ選ばれる(mandatory=true)。
+   ・盗塁成功／好走塁／ホームラン／ヒット／奪三振／併殺打 は「+おまけ」なので、
+     FLAVOR_APPEAR_RATEの確率でしか出ない(出ない時は何も追加しない)。
+
+   テキストを増やしたいときは、下のFLAVOR_TEXT_POOLに
+   { tags: [...], text: "..." } を追記するだけでOK。
+   tags: [] なら「いつでも使える汎用文」、
+   tags: ["9回","ビハインド"] のように指定すると「その状況の時だけ」使われ、当選率も上がる。
+   ============================================================ */
+
+// 「+おまけ」系(mandatory=false)が実際に出る確率。数値を変えると出現頻度を調整できる。
+const FLAVOR_APPEAR_RATE = {
+  "盗塁成功": 0.40,
+  "好走塁":   0.40,
+  "ホームラン": 0.65,
+  "ヒット":   0.12,
+  "奪三振":   0.22,
+  "併殺打":   0.40
+};
+
+// イニングの区分(数値はこのイニング「以下」で区分け、最後は9回扱いの受け皿)
+const FLAVOR_INNING_STAGE = [
+  { upto: 1, tag: "1回" },
+  { upto: 3, tag: "試合序盤" },
+  { upto: 6, tag: "試合中盤" },
+  { upto: 8, tag: "試合後半" },
+  { upto: 99, tag: "9回" }
+];
+
+function getFlavorInningTag(inningNum) {
+  for (const stage of FLAVOR_INNING_STAGE) {
+    if (inningNum <= stage.upto) return stage.tag;
+  }
+  return "9回";
+}
+
+// 点差の区分(攻撃側視点。diff = 攻撃側の点 - 守備側の点)
+function getFlavorScoreDiffTag(diff) {
+  if (diff >= 4) return "大量リード";
+  if (diff >= 1) return "リード";
+  if (diff === 0) return "同点";
+  if (diff >= -3) return "ビハインド";
+  return "大量ビハインド";
+}
+
+// 現在の状況タグ。simulateHalfInningが打席ごとに更新する(他の関数から
+// 引数を増やさずに状況を参照できるようにするための共有変数)。
+let currentFlavorTags = [];
+
+// 直近使ったテキストを記録し、同じ言い回しの連発を防ぐ(1試合の中だけ記憶)
+let flavorRecentUsed = [];
+const FLAVOR_RECENT_LIMIT = 12;
+
+// 結果別フレーバーテキストの本体
+// 🌐 新：状況置換プレースホルダーに対応したスポナビ速報テキストプール
+const FLAVOR_TEXT_POOL = {
+  "エラー": [
+    { tags: [], text: "　{D}({ERR_KIND}) {DPOS}への打球を{D}が{ERR_KIND_JP}。{B}はエラーにより出塁" },
+    { tags: [], text: "　{D}(悪送球) {DPOS}正面の打球を処理した{D}が一塁へ悪送球。その間に走者進塁" }
+  ],
+  "好守備": [
+    { tags: [], text: "　{D}(ファインプレー) {B}の鋭い打球に{D}が横っ飛び！ 超ファインプレー！" },
+    { tags: [], text: "　{D}(ダイビングキャッチ) {D}が前方の当たりに突っ込んでスライディングキャッチ！" }
+  ],
+  "盗塁成功": [
+    " 🏃 {R1}：完璧にモーションを盗んだ！ {BASE}への盗塁成功！",
+    "🏃 {R1}：キャッチャーの送球を上回る素晴らしいスタート！ {BASE}への盗塁成功！"
+  ],
+  "盗塁阻止": [
+    " 🏃 {R1}：{BASE}へスタートを切るも、{C}(バズーカ送球)！ タッチアウト！",
+    " 🏃 {R1}：盗塁を試みるも、{C}の正確な送球の前にアウト！"
+  ],
+"好走塁": [
+    { tags: [], text: "（好走塁！ 際どいタイミングも頭から滑り込む！）" },
+    { tags: [], text: "（好走塁！ 素晴らしいベースランニングで一気に生還！）" },
+    { tags: [], text: "（好走塁！ 三塁コーチの好判断に応え間一髪セーフ！）" }
+  ],
+  "ホームラン": [
+    "（捉えた！ {DIR}スタンドへ突き刺さるホームラン！ {SCORE}）",
+    "（打った瞬間それと分かる一撃！ {DIR}へのホームラン！ {SCORE}）",
+    "（{B}(バットフリップ)！ {DIR}中段へ運ぶ特大ホームラン！ {SCORE}）"
+  ],
+  "ヒット": [
+    "（{B}：{DIR}前へのクリーンヒット！）",
+    "（{B}：シャープに振り抜いた当たりは{DIR}前ヒットに！）"
+  ],
+  "奪三振": [
+    "（マウンド上の{P}が力強く吠える！ {P}(ガッツポーズ)）",
+    "（低めの変化球にバットが空を切る… 空振り三振）",
+    "（外角の厳しいコースを突かれ見逃し三振！）"
+  ],
+"併殺打": [
+    { tags: [], text: " （打者：{B}(ガッツポーズ崩れ) ゲッツーに倒れて天を仰ぐ）" },
+    { tags: [], text: " （手痛い併殺打でチャンスが潰れる）" }
+  ],
+  // 🌟 【追加】イニング間のチェンジ時（7回ラッキーセブンの球団歌にも対応）
+  "イニング間": [
+    { tags: [], text: "チェンジ。交代する守備陣がマウンド、ベンチ前でキャッチボールを始めています" },
+    { tags: ["7回間"], text: "7回表が終了。これから待望のラッキーセブン、スタンドには応援歌が鳴り響きます！" },
+    { tags: ["7回チェンジ"], text: "ラッキーセブンの裏の攻撃を前に、球場で一番の盛り上がりを見せる風船飛ばしのイベントが始まります！" }
+  ],
+  // 🌟 【追加】試合終了時（サヨナラ判定があるときはサヨナラを優先）
+  "試合終了": [
+    { tags: [], text: "ゲームセット。最後は{P}が凌ぎ切り、{SCORE}で試合終了となりました！" },
+    { tags: ["サヨナラ"], text: "劇的サヨナラ勝ち！ 打者：{B}(力強くガッツポーズ)！ ベンチから全員が飛び出して{B}に歓喜のタッチ！" },
+    { tags: ["サヨナラ"], text: "サヨナラゲームセット！ マウンド上で崩れ落ちる{P}。{B}の一振りが試合の運命を決定付けました！" }
+  ],
+  // 🌟 新設：四球（じっくり見た、ストレートなど）
+  "四球": [
+    "（フルカウントから冷静に見極め、フォアボールを選ぶ）",
+    "（じっくり見てフォアボールで出塁）"
+  ],
+  // 🌟 新設：死球
+  "死球": [
+    "（体に受けるデッドボール。一塁へ）",
+    "（インコース、デッドボールとなる）"
+  ]
+};
+
+// 🌐 置換機能付き実況テキスト取得エンジン (既存のタグ選出・確率・リピート制限を完全維持)
+function pickFlavorText(category, mandatory, ctx = {}) {
+  if (!mandatory) {
+    let rate = FLAVOR_APPEAR_RATE[category] !== undefined ? FLAVOR_APPEAR_RATE[category] : 0.3;
+    if (Math.random() >= rate) return "";
+  }
+  let pool = FLAVOR_TEXT_POOL[category];
+  if (!pool || pool.length === 0) return "";
+
+  // 内部のデータが「オブジェクト形式」でも「文字データ」でも、同じ形式に自動変換して統一します
+  let normalizedPool = pool.map(e => {
+    if (e && typeof e === 'object') {
+      return { tags: e.tags || [], text: e.text || "" };
+    } else {
+      return { tags: [], text: String(e || "") };
+    }
+  });
+
+  // 状況タグに合わないテキストは候補から除外 (タグ設定のない文章は常に候補に残ります)
+  let eligible = normalizedPool.filter(e => e.tags.length === 0 || e.tags.every(t => currentFlavorTags && currentFlavorTags.includes(t)));
+  if (eligible.length === 0) eligible = normalizedPool.filter(e => e.tags.length === 0);
+  if (eligible.length === 0) return "";
+
+  // 直近使った文章は避ける (候補がなくなったら一度リセットして全候補を許可)
+  let candidates = eligible.filter(e => !flavorRecentUsed.includes(e.text));
+  if (candidates.length === 0) candidates = eligible;
+
+  // 状況タグに指定がある文章は、当選率を2倍に優遇
+  let weighted = [];
+  candidates.forEach(e => {
+    weighted.push(e);
+    if (e.tags.length > 0) weighted.push(e);
+  });
+
+  let chosen = weighted[Math.floor(Math.random() * weighted.length)];
+  let txt = chosen.text;
+
+  // プレースホルダーを実際の選手データに置換
+  txt = txt.replace(/{B}/g, ctx.B || "打者");
+  txt = txt.replace(/{P}/g, ctx.P || "投手");
+  txt = txt.replace(/{C}/g, ctx.C || "捕手");
+  txt = txt.replace(/{D}/g, ctx.D || "野手");
+  txt = txt.replace(/{DPOS}/g, ctx.DPOS || "守備");
+  txt = txt.replace(/{DIR}/g, ctx.DIR || "強烈な当たり");
+  txt = txt.replace(/{SCORE}/g, ctx.SCORE || "0-0");
+  txt = txt.replace(/{BASE}/g, ctx.BASE || "塁");
+  txt = txt.replace(/{R1}/g, ctx.R1 || "走者");
+  txt = txt.replace(/{R2}/g, ctx.R2 || "走者");
+  txt = txt.replace(/{R3}/g, ctx.R3 || "走者");
+  txt = txt.replace(/{ERR_KIND}/g, ctx.ERR_KIND || "ミス");
+  txt = txt.replace(/{ERR_KIND_JP}/g, ctx.ERR_KIND_JP || "捕球ミス");
+
+  flavorRecentUsed.push(chosen.text); // 直近使用リストに登録
+  if (flavorRecentUsed.length > FLAVOR_RECENT_LIMIT) flavorRecentUsed.shift();
+  return txt;
+}
+
+function advanceRunners(bases, hitBase, tObj, defAvg, isHit, offStats) {
   let runs = 0;
   if (bases[2]) {
     let rName = bases[2].displayName || bases[2].name;
-    tObj.text += ` ${rName}が生還！`;
-    if(offStats) { let sc = offStats.batters[bases[2].idx]; if(sc) sc.R = (sc.R||0)+1; } // ★3塁走者の生還を記録
+    tObj.text += ` 三塁走者 ${rName}が生還！`; // 元の位置（三塁走者）を追加
+    if(offStats) { let sc = offStats.batters[bases[2].idx]; if(sc) sc.R = (sc.R||0)+1; } 
     runs++;
     bases[2] = null;
   }
@@ -4149,16 +4743,20 @@ function advanceRunners(bases, hitBase, tObj, defAvg, isHit, offStats) {
     if (hitBase === 1 && isHit) {
       if (Math.random() < clamp(0.1, 0.5, (getEffRunSpeed(bases[1]) - defAvg) * 0.005 + 0.3)) { 
         runs++; 
-        let runMsg = GOOD_RUNNING_TEXTS[Math.floor(Math.random() * GOOD_RUNNING_TEXTS.length)];
-        tObj.text += ` （走者：${runMsg}）`; 
-        if(offStats) { let st = offStats.batters[bases[1].idx]; if(st) { st.BR = (st.BR||0)+1; st.R = (st.R||0)+1; } } // ★好走塁での生還を記録
+        let rName = bases[1].displayName || bases[1].name;
+        tObj.text += ` 二塁走者 ${rName}が生還！`; // 元の位置（二塁走者）を追加
+        let runMsg = pickFlavorText("好走塁", false);
+        if (runMsg) { tObj.text += ` ${runMsg}`; }
+        if(offStats) { let st = offStats.batters[bases[1].idx]; if(st) { st.BR = (st.BR||0)+1; st.R = (st.R||0)+1; } } 
         bases[1] = null; 
       }
       else { bases[2] = bases[1]; bases[1] = null; }
     } else { 
       if (hitBase >= 2) { 
         runs++; 
-        if(offStats) { let sc = offStats.batters[bases[1].idx]; if(sc) sc.R = (sc.R||0)+1; } // ★2塁走者の生還を記録
+        let rName = bases[1].displayName || bases[1].name;
+        tObj.text += ` 二塁走者 ${rName}が生還！`; // 元の位置（二塁走者）を追加
+        if(offStats) { let sc = offStats.batters[bases[1].idx]; if(sc) sc.R = (sc.R||0)+1; } 
       } else bases[2] = bases[1]; 
       bases[1] = null; 
     }
@@ -4167,8 +4765,9 @@ function advanceRunners(bases, hitBase, tObj, defAvg, isHit, offStats) {
     if (hitBase === 1 && isHit) {
       if (Math.random() < clamp(0.1, 0.5, (getEffRunSpeed(bases[0]) - defAvg) * 0.005 + 0.3)) { 
         bases[2] = bases[0]; 
-        let runMsg = GOOD_RUNNING_TEXTS[Math.floor(Math.random() * GOOD_RUNNING_TEXTS.length)];
-        tObj.text += ` （走者：${runMsg}）`; 
+        let runMsg = pickFlavorText("好走塁", false);
+        // bases[1] の処理内
+        if (runMsg) { tObj.text += ` ${runMsg}`; }
         if(offStats) offStats.batters[bases[0].idx].BR = (offStats.batters[bases[0].idx].BR||0)+1; 
         bases[0] = null; 
       }
@@ -4176,16 +4775,20 @@ function advanceRunners(bases, hitBase, tObj, defAvg, isHit, offStats) {
     } else if (hitBase === 2 && isHit) {
       if (Math.random() < clamp(0.1, 0.5, (getEffRunSpeed(bases[0]) - defAvg) * 0.005 + 0.3)) { 
         runs++; 
-        let runMsg = GOOD_RUNNING_TEXTS[Math.floor(Math.random() * GOOD_RUNNING_TEXTS.length)];
-        tObj.text += ` （走者：${runMsg}）`; 
-        if(offStats) { let st = offStats.batters[bases[0].idx]; if(st) { st.BR = (st.BR||0)+1; st.R = (st.R||0)+1; } } // ★好走塁での生還を記録
+        let rName = bases[0].displayName || bases[0].name;
+        tObj.text += ` 一塁走者 ${rName}が生還！`; // 元の位置（一塁走者）を追加
+        let runMsg = pickFlavorText("好走塁", false);
+        if (runMsg) { tObj.text += ` ${runMsg}`; }
+        if(offStats) { let st = offStats.batters[bases[0].idx]; if(st) { st.BR = (st.BR||0)+1; st.R = (st.R||0)+1; } } 
         bases[0] = null; 
       }
       else { bases[2] = bases[0]; bases[0] = null; }
     } else { 
       if (hitBase >= 3) { 
         runs++; 
-        if(offStats) { let sc = offStats.batters[bases[0].idx]; if(sc) sc.R = (sc.R||0)+1; } // ★1塁走者の生還を記録
+        let rName = bases[0].displayName || bases[0].name;
+        tObj.text += ` 一塁走者 ${rName}が生還！`; // 元の位置（一塁走者）を追加
+        if(offStats) { let sc = offStats.batters[bases[0].idx]; if(sc) sc.R = (sc.R||0)+1; } 
       } else bases[hitBase] = bases[0]; 
       bases[0] = null; 
     }
@@ -4221,16 +4824,19 @@ function advanceRunnersOnOut(bases, outKind, tObj, defAvg, currentOuts, offStats
         runs++;
         bases[2] = null;
         if (outKind === "フライ") {
-          tObj.text += ` ${rName3}がタッチアップで生還`;
-        } else {
-          tObj.text += ` ${rName3}がゴロの間に生還`;
-        }
-      } else { 
-        // 本塁憤死
-        bases[2] = null; 
-        tObj.text += ` ${rName3} 本塁憤死`; 
-        tObj.addedOuts++; 
-      }
+              tObj.text += ` 三塁走者 ${rName3}がタッチアップで生還`;
+              tObj.isSacFly = true; // ★犠牲フライは打数(AB)に含めないためのフラグ
+              let runMsg = pickFlavorText("好走塁", false);
+              if (runMsg) tObj.text += ` ${runMsg}`; // カッコの二重重なりを防ぎ直接連結します
+            } else {
+              tObj.text += ` 三塁走者 ${rName3}がゴロの間に生還`; // 三塁走者を追加
+            }
+      } else {
+      // 本塁憤死
+      bases[2] = null; 
+      tObj.text += ` 三塁走者 ${rName3}が本塁憤死`; // ★「三塁走者」および「が」を補って表記を統一します
+      tObj.addedOuts++; 
+    }
     } else {
       // 突入を自重した場合（Math.random() >= goRate）
       // bases[2]はrunnerのままで留まり、アウトカウントや得点は動かさない
@@ -4249,42 +4855,6 @@ function advanceRunnersOnOut(bases, outKind, tObj, defAvg, currentOuts, offStats
 }
 
 function simulateHalfInning(offense, defense, startIndex, log, offStats, defStats, inningNum, score, isBottom) {
-  // --- スポナビ風・愉快な実況ログテキスト集 ---
-  const ERROR_TEXTS = [
-    "が痛恨のファンブル！ボールが手からポロリとこぼれ落ちる！ランナー進塁！",
-    "が打球を捕り損ねて弾く！慌てて後ろへ追いかける間に次の塁へ進まれる！",
-    "がファーストへ大暴投！ボールがカメラマン席へ吸い込まれる間に進塁を許す！",
-    "が目測を誤って打球を後ろに逸らす！外野をボールが転々とする間に走者進塁！",
-    "が送球を後ろに逸らす！痛い悪送球で全員セーフ！"
-  ];
-
-  const FINE_PLAY_TEXTS = [
-    "が泥だらけになりながらダイビングキャッチ！超絶ファインプレーでスタジアム激震！",
-    "がフェンス際、大ジャンプキャッチ！激突しながらも奇跡的にボールを死守！",
-    "が球際の鋭いライナーに横っ飛び！グラブの先っぽギリギリで掴み取る！",
-    "が猛ダッシュして前方にスライディングキャッチ！スタンドから大喝采！",
-    "が背走して一回転キャッチ！まるでサーカスのようなアクロバティックな守備！"
-  ];
-
-  const STEAL_OUT_TEXTS = [
-    "のバズーカ送球が二塁へドンピシャ！タッチアウト！捕手は力強くガッツポーズ！",
-    "が矢のようなスローイング！走者はがっくりと肩を落としてベンチへ戻る…！",
-    "が完璧なコントロールの送球で刺す！全く無駄のないクイック！タッチアウト！",
-    "の強肩が炸裂！スライディング及ばず、余裕を持って二塁でタッチアウト！"
-  ];
-
-  const SPONAVI_RAND_EVENTS = [
-    " （地鳴りのような大歓声で、球場全体のボルテージは一瞬で最高潮に！）",
-    " （マウンド上のピッチャーはガックリと両膝を落とし、しばらく動けず…！）",
-    " （判定を不服として、一塁側ベンチから監督が顔を真っ赤にして猛抗議中！）",
-    " （きわどいプレーに審判団が集まる！判定リクエスト！リプレイ検証の結果、判定が覆りセーフ！）",
-    " （打ったバッターは塁上で力強く胸を叩き、ベンチへガッツポーズ！男泣きを見せる！）",
-    " （スタンドから魂を揺さぶる大合唱の応援歌！球場が小刻みに震えている！）",
-    " （ベンチ裏からはメガホンの叩き合う音が鳴り響き、大お祭り騒ぎに！）",
-    " （スタンドの一部は一瞬静まり返り、次の瞬間、大爆発したかのような歓声が響き渡る！）",
-    " （判定に納得のいかない監督が興奮しすぎて、なんと激怒の末、退場宣告！！球場騒然！）"
-  ];
-
   let outs = 0, bases =[null, null, null], batterIndex = startIndex;
   let pIdx = defense.pAssign[inningNum - 1]; 
   let battersFaced = 0; 
@@ -4325,22 +4895,39 @@ function simulateHalfInning(offense, defense, startIndex, log, offStats, defStat
     let baseName = targetBaseKey === 1 ? "二塁" : "三塁";
     let stealLog = "";
     
+    // 狙うベースに応じて、走者の位置名（一塁走者／二塁走者）を自動で判別します
+    let startBaseName = targetBaseKey === 1 ? "一塁走者" : "二塁走者";
+
+    let localCtx = {
+      B: "",
+      P: currentPitcher.displayName || currentPitcher.name,
+      C: cName,
+      D: "",
+      DPOS: "",
+      R1: `${startBaseName} ${runnerName}`, // 走者名に「一塁走者」などのテキストを結合
+      R2: "",
+      R3: "",
+      SCORE: `${offense.shortName || offense.name.slice(0, 3)} ${score.off}-${score.def} ${defense.shortName || defense.name.slice(0, 3)}`,
+      BASE: baseName
+    };
+    
     if (isSuccess) {
-      stealLog = `🏃 一塁走者 ${runnerName} が素早くスタート！ ${baseName}への盗塁成功！`;
-      if (Math.random() < 0.12) {
-        stealLog += SPONAVI_RAND_EVENTS[Math.floor(Math.random() * SPONAVI_RAND_EVENTS.length)];
-      }
+      stealLog = pickFlavorText("盗塁成功", true, localCtx);
       if(offStats && offStats.batters[runner.idx]) offStats.batters[runner.idx].SB = (offStats.batters[runner.idx].SB||0)+1;
       if(defStats && catcher) defStats.batters[catcher.idx].SB_Allowed = (defStats.batters[catcher.idx].SB_Allowed||0)+1;
       return { success: true, log: stealLog };
     } else {
-      let stealOutMsg = STEAL_OUT_TEXTS[Math.floor(Math.random() * STEAL_OUT_TEXTS.length)];
-      stealLog = `🏃 一塁走者 ${runnerName} がスタートするも、捕手 ${cName} ${stealOutMsg} (${outs+1}アウト)`;
-      if (Math.random() < 0.12) {
-        stealLog += SPONAVI_RAND_EVENTS[Math.floor(Math.random() * SPONAVI_RAND_EVENTS.length)];
-      }
+      stealLog = pickFlavorText("盗塁阻止", true, localCtx);
+      let endText = (outs + 1 >= 3) ? " (攻撃終了)" : ` (${outs+1}アウト)`;
+      stealLog += endText;
       if(offStats && offStats.batters[runner.idx]) offStats.batters[runner.idx].CS = (offStats.batters[runner.idx].CS||0)+1;
-      if(defStats) { defStats.pitchers[pIdx].outs++; if(catcher) { let cStat = defStats.batters[catcher.idx]; if(cStat) cStat.CS_Caught = (cStat.CS_Caught||0)+1; } }
+      if(defStats) { 
+        defStats.pitchers[pIdx].outs++; 
+        if(catcher) { 
+          let cStat = defStats.batters[catcher.idx]; 
+          if(cStat) cStat.CS_Caught = (cStat.CS_Caught||0)+1; 
+        } 
+      }
       return { success: false, log: stealLog };
     }
   }
@@ -4368,7 +4955,34 @@ function simulateHalfInning(offense, defense, startIndex, log, offStats, defStat
 
     rispFlag = (bases[1] || bases[2]) ? true : false;
 
+    let inTag = getFlavorInningTag(inningNum);
+    let specificInningTag = `${inningNum}回`;
+    let diffTag = getFlavorScoreDiffTag(score.off - score.def);
+    let rispTagStr = rispFlag ? '得点圏' : '好機なし';
+    let countTag = outs === 2 ? '2死' : outs === 1 ? '1死' : '無死';
+    
+    currentFlavorTags = [inTag, specificInningTag, diffTag, rispTagStr, countTag];
+
+    const pushBatterInfo = () => {
+      if (!(ENABLE_MATCH_LOG && log)) return;
+      let batterInfo = `${batterIndex+1}番：${batter.displayName || batter.name}`;
+      let baseStr = "";
+      if(bases[0] && bases[1] && bases[2]) baseStr = "満塁";
+      else if(bases[0] && bases[1]) baseStr = "一二塁";
+      else if(bases[0] && bases[2]) baseStr = "一三塁";
+      else if(bases[1] && bases[2]) baseStr = "二三塁";
+      else if(bases[0]) baseStr = "一塁";
+      else if(bases[1]) baseStr = "二塁";
+      else if(bases[2]) baseStr = "三塁";
+      let outStr = outs === 0 ? "無死" : outs === 1 ? "一死" : "二死";
+      log.push(`<span class="log-batter-info">${batterInfo}　${outStr}${baseStr}</span>`);
+    };
+
+    pushBatterInfo();
+    if (ENABLE_MATCH_LOG && log && pendingEvents.length > 0) log.push("");
+
     if (pendingEvents.length > 0) {
+      let basesKeyBefore = `${!!bases[0]}-${!!bases[1]}-${!!bases[2]}`;
       for (let event of pendingEvents) {
         if (outs >= 3) break;
         if (event.type === 'pb') processPassedBall();
@@ -4385,6 +4999,12 @@ function simulateHalfInning(offense, defense, startIndex, log, offStats, defStat
         }
       }
       pendingEvents =[];
+
+      let basesKeyAfter = `${!!bases[0]}-${!!bases[1]}-${!!bases[2]}`;
+      if (outs < 3 && basesKeyAfter !== basesKeyBefore && log) {
+        log.push("");
+        pushBatterInfo();
+      }
     }
     
     if (outs >= 3) break;
@@ -4413,23 +5033,31 @@ function simulateHalfInning(offense, defense, startIndex, log, offStats, defStat
     let tObj = { text: "", addedOuts: 0 };
     let result = null;
 
-    if (ENABLE_MATCH_LOG && log) {
-      let batterInfo = `${batterIndex+1}番：${batter.displayName || batter.name}`;
-      let baseStr = "";
-      if(bases[0] && bases[1] && bases[2]) baseStr = "満塁";
-      else if(bases[0] && bases[1]) baseStr = "一二塁";
-      else if(bases[0] && bases[2]) baseStr = "一三塁";
-      else if(bases[1] && bases[2]) baseStr = "二三塁";
-      else if(bases[0]) baseStr = "一塁";
-      else if(bases[1]) baseStr = "二塁";
-      else if(bases[2]) baseStr = "三塁";
-      let outStr = outs === 0 ? "無死" : outs === 1 ? "一死" : "二死";
-      log.push(`<span class="log-batter-info">${batterInfo}　${outStr}${baseStr}</span>`);
-    }
-
     let isRunScoringPlay = false;
     let actionLog = "";
     let icon = "";
+
+    let r1Name = bases[0] ? bases[0].displayName || bases[0].name : "";
+    let r2Name = bases[1] ? bases[1].displayName || bases[1].name : "";
+    let r3Name = bases[2] ? bases[2].displayName || bases[2].name : "";
+    
+    let cName = catcher ? catcher.displayName || catcher.name : '捕手';
+    
+    let teamOffName = offense.shortName || offense.name.slice(0, 3);
+    let teamDefName = defense.shortName || defense.name.slice(0, 3);
+
+    let ctx = {
+      B: batter.displayName || batter.name,
+      P: currentPitcher.displayName || currentPitcher.name,
+      C: cName,
+      D: "",
+      DPOS: "",
+      DIR: "",
+      SCORE: `${teamOffName} ${score.off}-${score.def} ${teamDefName}`,
+      R1: r1Name,
+      R2: r2Name,
+      R3: r3Name
+    };
 
     if (doBunt) {
       if(bStat) { bStat.PA++; bStat.AB++; if(rispFlag) { bStat.RISP_AB++; } }
@@ -4453,7 +5081,9 @@ function simulateHalfInning(offense, defense, startIndex, log, offStats, defStat
         outs++; rRuns = advanceRunners(bases, 1, tObj, defAvg, false, offStats); 
         let buntDesc = "送りバント";
         if (rRuns > 0) buntDesc = "スクイズ";
-        icon = "🔴"; actionLog = `${buntDesc}成功！走者を安全に進塁させる！`;
+        icon = "🔴"; 
+        
+        actionLog = `${buntDesc}成功！走者を安全に進塁させる！${tObj.text}`;
         if(bStat) { bStat.AB--; bStat.SH++; } if(pStat) { pStat.AB--; pStat.outs++; }
       } else {
         outs++; 
@@ -4463,14 +5093,11 @@ function simulateHalfInning(offense, defense, startIndex, log, offStats, defStat
           icon = "🔴"; actionLog = `バント小フライとなりアウト`; if(pStat) pStat.outs++;
         }
       }
-      
-      if (Math.random() < 0.12) {
-        actionLog += SPONAVI_RAND_EVENTS[Math.floor(Math.random() * SPONAVI_RAND_EVENTS.length)];
-      }
 
       if (ENABLE_MATCH_LOG && log) {
         let logColorStyle = isRunScoringPlay ? 'style="color:#ff6600;"' : '';
-        log.push(`<span class="log-result" ${logColorStyle}>${icon} ${actionLog} (${outs}アウト)</span>`);
+        let endText = (outs >= 3) ? ` (攻撃終了)` : ` (${outs}アウト)`;
+        log.push(`<span class="log-result" ${logColorStyle}>${icon} ${actionLog}${endText}</span>`);
       }
 
       if (rRuns > 0) { 
@@ -4516,7 +5143,7 @@ function simulateHalfInning(offense, defense, startIndex, log, offStats, defStat
 
     if (result === "アウト") {
       let errDir = atBat.dir || "内野";
-      if(!atBat.isSO) {
+      if(!atBat.isSO && !atBat.fp) {
         let defPosName = errDir;
         if(errDir==="ピッチャー") defPosName="投"; if(errDir==="キャッチャー") defPosName="捕";
         if(errDir==="一塁") defPosName="一"; if(errDir==="二塁") defPosName="二"; if(errDir==="三塁") defPosName="三"; if(errDir==="遊撃") defPosName="遊";
@@ -4527,164 +5154,213 @@ function simulateHalfInning(offense, defense, startIndex, log, offStats, defStat
         if(Math.random() < errRate) {
           isError = true; 
           let errName = errDefender ? errDefender.displayName || errDefender.name : errDir; 
-          let errorTypeMsg = ERROR_TEXTS[Math.floor(Math.random() * ERROR_TEXTS.length)];
-          icon = "🟣"; actionLog = `${errName}${errorTypeMsg}`;
+          let errorTypeMsg = pickFlavorText("エラー", true);
+          icon = "🟣"; actionLog = `${atBat.desc}　しかし${errDir}の${errName}${errorTypeMsg}`;
           if(errDefender && defStats) { let dStat = defStats.batters[errDefender.idx]; if(dStat) dStat.E = (dStat.E||0)+1; }
         }
       }
 
-      if(isError) {
-        inningErrors++;
-        if(bStat) bStat.AB++; if(pStat) pStat.AB++; 
-        rRuns = advanceRunners(bases, 1, tObj, defAvg, false, offStats); bases[0] = batter;
-        if(rRuns > 0) isRunScoringPlay = true;
-      } else {
-        if(atBat.isSO) {
-          icon = "🟡"; actionLog = `${atBat.desc}`;
-        } else if(atBat.fp) {
-          let fpName = atBat.fp ? atBat.fp.displayName || atBat.fp.name : atBat.dir;
-          let fpStyleMsg = FINE_PLAY_TEXTS[Math.floor(Math.random() * FINE_PLAY_TEXTS.length)];
-          icon = "🔴"; actionLog = `${fpName}${fpStyleMsg}`;
-        } else {
-          icon = "🔴"; actionLog = `${atBat.desc}`;
-        }
-        
-        let currentOutsBeforePlay = outs;
-        if (currentOutsBeforePlay === 2) {
-          if(bStat) bStat.AB++; if(pStat) pStat.AB++; if(atBat.isSO && pStat) pStat.SO++;
-          outs += 1; if(pStat) pStat.outs++;
-          if (ENABLE_MATCH_LOG && log) {
-            log.push(`<span class="log-result">${icon} ${actionLog} (${outs}アウト)</span>`);
+          if(isError) {
+            inningErrors++;
+            if(bStat) bStat.AB++; if(pStat) pStat.AB++; 
+            rRuns = advanceRunners(bases, 1, tObj, defAvg, false, offStats); bases[0] = batter;
+            if(rRuns > 0) isRunScoringPlay = true;
+            actionLog += tObj.text; // ★エラー時に発生した進塁・生還ログを正しく後ろに連結します
+          } else {
+            let dPlayer = defense.batters.find(b => b.defPos === (errDir === "ピッチャー" ? "投" : errDir === "キャッチャー" ? "捕" : errDir === "一塁" ? "一" : errDir === "二塁" ? "二" : errDir === "三塁" ? "三" : errDir === "遊撃" ? "遊" : errDir === "レフト" ? "左" : errDir === "センター" ? "中" : errDir === "ライト" ? "右" : ""));
+            let dPlayerName = dPlayer ? dPlayer.displayName || dPlayer.name : errDir;
+            ctx.D = dPlayerName;
+            ctx.DPOS = getPosJpName(atBat.dir);
+
+            if(atBat.isSO) {
+              let soMsg = pickFlavorText("奪三振", false, ctx);
+              icon = "🟡"; actionLog = `${atBat.desc}${soMsg ? " " + soMsg : ""}`;
+            } else if(atBat.fp) {
+              let fpStyleMsg = pickFlavorText("好守備", true, ctx);
+              // 打球結果（レフトフライなど）を先頭に表示し、後ろにファインプレー実況を連結します
+              icon = "🔴"; actionLog = `${atBat.desc}　${fpStyleMsg}`;
+            } else {
+              icon = "🔴"; actionLog = `${atBat.desc}`;
+            }
+            
+            let currentOutsBeforePlay = outs;
+            if (currentOutsBeforePlay === 2) {
+              if(bStat) bStat.AB++; if(pStat) pStat.AB++; if(atBat.isSO && pStat) pStat.SO++;
+              outs += 1; if(pStat) pStat.outs++;
+              if (ENABLE_MATCH_LOG && log) {
+                log.push(`<span class="log-result">${icon} ${actionLog} (${outs}アウト)</span>`);
+              }
+              break;
+            }
+            
+            if (atBat.isGrounder && bases[0] && outs < 2) {
+              let runnerSpd = bases[0].speed, avoidRate = clamp(0.1, 0.9, ((runnerSpd + batter.speed)/2) * 0.01);
+              if (Math.random() > avoidRate) { 
+                  tObj.addedOuts += 1; bases[0] = null; actionLog += ` 【併殺】`; 
+                  let dpMsg = pickFlavorText("併殺打", false, ctx);
+                  if (dpMsg) actionLog += ` ${dpMsg}`;
+                  if(pStat) pStat.outs += 1; if(bStat) bStat.DP=(bStat.DP||0)+1;
+                  rRuns += advanceRunnersOnOut(bases, "併殺", tObj, defAvg, outs + tObj.addedOuts, offStats);
+              } else { 
+                  actionLog += `（併殺崩れ）`; 
+                  rRuns += advanceRunnersOnOut(bases, "ゴロ", tObj, defAvg, outs + tObj.addedOuts, offStats);
+              }
+            } else {
+              if (!atBat.isSO) { 
+                rRuns += advanceRunnersOnOut(bases, atBat.isGrounder ? "ゴロ" : "フライ", tObj, defAvg, outs + tObj.addedOuts, offStats);
+              }
+            }
+            
+     if (tObj.isSacFly) {
+              // 打ち上げた方向への犠牲フライという表現に直接書き換えます
+              actionLog = `${atBat.dir || "外野"}への犠牲フライ！`;
+            }
+            actionLog += tObj.text;
+            
+            if(bStat) { bStat.AB++; if (tObj.isSacFly) { bStat.AB--; bStat.SF = (bStat.SF||0)+1; } } 
+            if(pStat) { pStat.AB++; if (tObj.isSacFly) pStat.AB--; }
+            if(atBat.isSO && pStat) pStat.SO++;
+            outs += 1; if(pStat) pStat.outs++;
+            outs += tObj.addedOuts;
+            if(rRuns > 0) isRunScoringPlay = true;
           }
-          break;
-        }
-        
-        if (atBat.isGrounder && bases[0] && outs < 2) {
-          let runnerSpd = bases[0].speed, avoidRate = clamp(0.1, 0.9, ((runnerSpd + batter.speed)/2) * 0.01);
-          if (Math.random() > avoidRate) { 
-              tObj.addedOuts += 1; bases[0] = null; actionLog += ` 【併殺】`; 
-              if(pStat) pStat.outs += 1; if(bStat) bStat.DP=(bStat.DP||0)+1; 
-              rRuns += advanceRunnersOnOut(bases, "併殺", tObj, defAvg, outs + tObj.addedOuts, offStats);
-          } else { 
-              bases[0] = batter; actionLog += ` 併殺崩れ`; 
-              rRuns += advanceRunnersOnOut(bases, "ゴロ", tObj, defAvg, outs + tObj.addedOuts, offStats);
+        } else if (result === "四球" || result === "死球") {
+          icon = "🟢"; actionLog = `${result === "四球" ? "フォアボール" : "デッドボール"}`;
+          
+          if (result === "四球") {
+            let bbMsg = pickFlavorText("四球", false, ctx);
+            if (bbMsg) actionLog += bbMsg;
+          } else if (result === "死球") {
+            let hbpMsg = pickFlavorText("死球", false, ctx);
+            if (hbpMsg) actionLog += hbpMsg;
           }
-        } else {
-          if (!atBat.isSO) { 
-            rRuns += advanceRunnersOnOut(bases, atBat.isGrounder ? "ゴロ" : "フライ", tObj, defAvg, outs + tObj.addedOuts, offStats);
-          }
-        }
-        
-        if(bStat) bStat.AB++; if(pStat) pStat.AB++; if(atBat.isSO && pStat) pStat.SO++;
-        outs += 1; if(pStat) pStat.outs++;
-        outs += tObj.addedOuts;
-        if(rRuns > 0) isRunScoringPlay = true;
-      }
-    } else if (result === "四球" || result === "死球") {
-      icon = "🟢"; actionLog = `${result === "四球" ? "フォアボール" : "デッドボール"}`;
+
       if (bases[0] && bases[1] && bases[2]) { 
-        rRuns = 1; actionLog += ` 押し出し！`; isRunScoringPlay = true; 
+        // 押し出された三塁走者の名前を表示します
+        rRuns = 1; actionLog += ` 押し出し！ 三塁走者 ${bases[2].displayName || bases[2].name}が生還！`; isRunScoringPlay = true; 
         if(offStats) { let sc = offStats.batters[bases[2].idx]; if(sc) sc.R = (sc.R||0)+1; }
       }
-      bases[2] = bases[1] && bases[0] ? bases[2] : bases[2]; if(bases[0] && bases[1]) bases[2] = bases[1]; if(bases[0]) bases[1] = bases[0]; bases[0] = batter;
-      if(bStat) { if(result === "四球") bStat.BB++; else bStat.HBP++; } if(pStat) { if(result === "四球") pStat.BB++; else pStat.HBP++; }
-    } else {
-      inningHits++;
-      icon = "🔵";
-      let hitBase = result === "内野安打" || result === "単打" ? 1 : result === "長打" ? 2 : result === "三塁打" ? 3 : 4;
-      
-      let preScoreOff = score.off;
-      let preScoreDef = score.def;
-      rRuns = advanceRunners(bases, hitBase, tObj, defAvg, true, offStats); 
-      if (hitBase === 4) { rRuns++; } else { if(hitBase===1) bases[0]=batter; else if(hitBase===2) bases[1]=batter; else if(hitBase===3) bases[2]=batter; }
-      
-      let isTimely = rRuns > 0;
-      let adjective = "";
-      if (isTimely) {
-         isRunScoringPlay = true;
-         if (preScoreOff === 0 && preScoreDef === 0) adjective = "先制";
-         else if (preScoreOff < preScoreDef && preScoreOff + rRuns === preScoreDef) adjective = "同点";
-         else if (preScoreOff < preScoreDef && preScoreOff + rRuns > preScoreDef) adjective = "逆転";
-         else if (preScoreOff === preScoreDef && preScoreOff + rRuns > preScoreDef) adjective = "勝ち越し";
-         if (inningNum >= 9 && isBottom && preScoreOff + rRuns > preScoreDef && preScoreOff <= preScoreDef) adjective = "サヨナラ";
-      }
-      
-      let timelyText = (isTimely && hitBase !== 4) ? "タイムリー" : "";
-      let hitDesc = "";
-if (hitBase === 4) {
-        const noStand = ["センター", "バックスクリーン"];
-        hitDesc = noStand.includes(atBat.dir)
-          ? `${adjective}${atBat.dir}へ飛び込む豪快なホームラン！`
-          : `${atBat.dir}スタンドへ！${adjective}ホームラン！`;
-      } else {
-          let hitName = hitBase === 1 ? (atBat.isGrounder ? "内野安打" : "ヒット") : hitBase === 2 ? "ツーベース" : "スリーベース";
-          hitDesc = `${atBat.dir}への${adjective}${timelyText}${hitName}！`;
-      }
-      actionLog = `${hitDesc}${tObj.text}`; // 走塁の結果（tObj.text）を結合
-      if(bStat) { bStat.AB++; bStat.H++; bStat.TB += hitBase; if(hitBase===2) bStat._2B=(bStat._2B||0)+1; else if(hitBase===3) bStat._3B=(bStat._3B||0)+1; else if(hitBase===4) bStat.R=(bStat.R||0)+1; } 
-　if(pStat) { pStat.AB++; pStat.H++; pStat.TB += hitBase; } if(pStat) { pStat.AB++; pStat.H++; pStat.TB += hitBase; }
-      if (batter._gameHits !== undefined) batter._gameHits++;
-    }
+          bases[2] = bases[1] && bases[0] ? bases[2] : bases[2]; if(bases[0] && bases[1]) bases[2] = bases[1]; if(bases[0]) bases[1] = bases[0]; bases[0] = batter;
+          if(bStat) { if(result === "四球") bStat.BB++; else bStat.HBP++; } if(pStat) { if(result === "四球") pStat.BB++; else pStat.HBP++; }
+        } else {
+          inningHits++;
+          icon = "🔵";
+          let hitBase = result === "内野安打" || result === "単打" ? 1 : result === "長打" ? 2 : result === "三塁打" ? 3 : 4;
+          
+          let preScoreOff = score.off;
+          let preScoreDef = score.def;
+          rRuns = advanceRunners(bases, hitBase, tObj, defAvg, true, offStats); 
+          if (hitBase === 4) { rRuns++; } else { if(hitBase===1) bases[0]=batter; else if(hitBase===2) bases[1]=batter; else if(hitBase===3) bases[2]=batter; }
+          
+          let isTimely = rRuns > 0;
+          let adjective = "";
+          if (isTimely) {
+             isRunScoringPlay = true;
+             if (preScoreOff === 0 && preScoreDef === 0) adjective = "先制";
+             else if (preScoreOff < preScoreDef && preScoreOff + rRuns === preScoreDef) adjective = "同点";
+             else if (preScoreOff < preScoreDef && preScoreOff + rRuns > preScoreDef) adjective = "逆転";
+             else if (preScoreOff === preScoreDef && preScoreOff + rRuns > preScoreDef) adjective = "勝ち越し";
+             if (inningNum >= 9 && isBottom && preScoreOff + rRuns > preScoreDef && preScoreOff <= preScoreDef) adjective = "サヨナラ";
+          }
+          
+          let timelyText = (isTimely && hitBase !== 4) ? "タイムリー" : "";
+          let hitDesc = "";
+          if (hitBase === 4) {
+            const noStand = ["センター", "バックスクリーン"];
+            hitDesc = noStand.includes(atBat.dir)
+              ? `${atBat.dir}へ飛び込む豪快な${adjective}ホームラン！`
+              : `${atBat.dir}スタンドへ！${adjective}ホームラン！`;
+          } else {
+              let hitName = hitBase === 1 ? (atBat.isGrounder ? "内野安打" : "ヒット") : hitBase === 2 ? "ツーベース" : "スリーベース";
+              const INFIELD_XBH_ACTION = {
+                "一塁": { 2: ["一塁線を破る", "一塁手の横を抜けていく"], 3: ["一塁線を破って右中間まで転がる", "一塁手の横を抜けて深く弾む"] },
+                "二塁": { 2: ["二塁手の頭上を越える", "二塁手の脇を抜けていく"], 3: ["二塁手の頭上を越えて深く弾む", "二塁手の脇を抜けて中堅深くまで達する"] },
+                "三塁": { 2: ["三塁線を破る", "三塁手の横を抜けていく"], 3: ["三塁線を破って左中間まで転がる", "三塁手の横を抜けて深く弾む"] },
+                "遊撃": { 2: ["遊撃の頭上を越える", "遊撃の脇を抜けていく"], 3: ["遊撃の頭上を越えて中堅深くまで達する", "遊撃の脇を抜けて左中間を切り裂く"] }
+              };
+              if (hitBase >= 2 && INFIELD_XBH_ACTION[atBat.dir]) {
+                let actionPhrases = INFIELD_XBH_ACTION[atBat.dir][hitBase];
+                let actionPhrase = actionPhrases[Math.floor(Math.random() * actionPhrases.length)];
+                hitDesc = `${actionPhrase}${adjective}${timelyText}${hitName}！`;
+              } else {
+                hitDesc = `${atBat.dir}への${adjective}${timelyText}${hitName}！`;
+              }
+          }
+          actionLog = `${hitDesc}${tObj.text}`;
+          let hitFlavorMsg = pickFlavorText(hitBase === 4 ? "ホームラン" : "ヒット", false, ctx);
+          if (hitFlavorMsg) actionLog += ` ${hitFlavorMsg}`;
+          if(bStat) { bStat.AB++; bStat.H++; bStat.TB += hitBase; if(hitBase===2) bStat._2B=(bStat._2B||0)+1; else if(hitBase===3) bStat._3B=(bStat._3B||0)+1; else if(hitBase===4) bStat.R=(bStat.R||0)+1; } 
+          if(pStat) { pStat.AB++; pStat.H++; pStat.TB += hitBase; }
+          if (batter._gameHits !== undefined) batter._gameHits++;
+        }
 
-    if (Math.random() < 0.12) {
-      actionLog += SPONAVI_RAND_EVENTS[Math.floor(Math.random() * SPONAVI_RAND_EVENTS.length)];
-    }
-
-    if (ENABLE_MATCH_LOG && log) {
-      let logColorStyle = isRunScoringPlay ? 'style="color:#ff6600;"' : '';
-      log.push(`<span class="log-result" ${logColorStyle}>${icon} ${actionLog}${outs >= 3 || (inningNum >= 9 && isBottom && score.off > score.def) ? ` (${outs}アウト)` : ''}</span>`);
-    }
-
-    if (rRuns > 0) {
-        inningRuns += rRuns; score.off += rRuns;
-        if(pStat) pStat.ER += rRuns;
-        if(bStat) bStat.RBI = (bStat.RBI||0)+rRuns;
-        if(result === "本塁打" && bStat) bStat.HR = (bStat.HR||0)+1;
         if (ENABLE_MATCH_LOG && log) {
-          log.push(`<span style="color:#ff6600;">  <b>+${rRuns}点追加！ (${offense.shortName} ${score.off} - ${score.def} ${defense.shortName})</b></span>`);
+          let logColorStyle = isRunScoringPlay ? 'style="color:#ff6600;"' : '';
+          let endText = (outs >= 3 || (inningNum >= 9 && isBottom && score.off > score.def)) ? ` (攻撃終了)` : '';
+          log.push(`<span class="log-result" ${logColorStyle}>${icon} ${actionLog}${endText}</span>`);
         }
-    }
 
-    if (outs < 3) {
-      if (!bases[1] && bases[0]) {
-        let rSpd = getEffStealSpeed(bases[0]), sucRate = clamp(0.3, 0.95, 0.65 + (rSpd - catcherDef) * 0.01), attRate = clamp(0.0, 1.0, (sucRate - 0.3) * 0.5);
-        if (Math.random() < attRate) {
-          pendingEvents.push({ type: 'steal', runner: bases[0], targetBase: 1, runnerName: bases[0].displayName || bases[0].name });
+        if (rRuns > 0) {
+            inningRuns += rRuns; score.off += rRuns;
+            if(pStat) pStat.ER += rRuns;
+            if(bStat) bStat.RBI = (bStat.RBI||0)+rRuns;
+            if(result === "本塁打" && bStat) bStat.HR = (bStat.HR||0)+1;
+            if(result === "本塁打" && pStat) pStat.HR_Allowed = (pStat.HR_Allowed||0)+1;
+            if (ENABLE_MATCH_LOG && log) {
+              log.push(`<span style="color:#ff6600;">  <b>+${rRuns}点追加！ (${offense.shortName} ${score.off} - ${score.def} ${defense.shortName})</b></span>`);
+            }
         }
-      }
-      if (bases[1] && !bases[2]) {
-        let rSpd = getEffStealSpeed(bases[1]), sucRate = clamp(0.3, 0.95, 0.65 + (rSpd - catcherDef) * 0.01), attRate = clamp(0.0, 1.0, (sucRate - 0.3) * 0.5) / 3;
-        if (Math.random() < attRate) {
-          pendingEvents.push({ type: 'steal', runner: bases[1], targetBase: 2, runnerName: bases[1].displayName || bases[1].name });
-        }
-      }
-    }
 
-    batterIndex = (batterIndex + 1) % offense.batters.length;
-}
-  currentPitcher.stamina = Math.max(0, currentPitcher.stamina - 4.0 * battersFaced);
-  let leadAtExit = score.off - score.def;
-  return {
-    runs: inningRuns,
-    hits: inningHits,
-    errors: inningErrors,
-    nextIndex: batterIndex,
-    score: score,
-    pitcherIdx: inningPitcherIdx,
-    leadEntry: leadAtEntry,
-    leadExit: leadAtExit
-  };
-}
+        if (outs < 3) {
+          if (!bases[1] && bases[0]) {
+            let rSpd = getEffStealSpeed(bases[0]), sucRate = clamp(0.3, 0.95, 0.65 + (rSpd - catcherDef) * 0.01), attRate = clamp(0.0, 1.0, (sucRate - 0.3) * 0.5);
+            if (Math.random() < attRate) {
+              pendingEvents.push({ type: 'steal', runner: bases[0], targetBase: 1, runnerName: bases[0].displayName || bases[0].name });
+            }
+          }
+          if (bases[1] && !bases[2]) {
+            let rSpd = getEffStealSpeed(bases[1]), sucRate = clamp(0.3, 0.95, 0.65 + (rSpd - catcherDef) * 0.01), attRate = clamp(0.0, 1.0, (sucRate - 0.3) * 0.5) / 3;
+            if (Math.random() < attRate) {
+              pendingEvents.push({ type: 'steal', runner: bases[1], targetBase: 2, runnerName: bases[1].displayName || bases[1].name });
+            }
+          }
+        }
+
+        batterIndex = (batterIndex + 1) % offense.batters.length;
+      } // while (outs < 3) ループ終了
+
+      currentPitcher.stamina = Math.max(0, currentPitcher.stamina - 4.0 * battersFaced);
+      let leadAtExit = score.off - score.def;
+      return {
+        runs: inningRuns,
+        hits: inningHits,
+        errors: inningErrors,
+        nextIndex: batterIndex,
+        score: score,
+        pitcherIdx: inningPitcherIdx,
+        leadEntry: leadAtEntry,
+        leadExit: leadAtExit,
+        isWalkOff: (inningNum >= 9 && isBottom && score.off > score.def)
+      };
+    } // simulateHalfInning 終了
 
 function simulateGame(teamA, teamB, statsA = null, statsB = null) {
   if(!teamA || !teamA.batters || !teamB || !teamB.batters) return null;
   let scoreA = 0, scoreB = 0, inningsA = [], inningsB =[], hitsA = 0, errorsA = 0, hitsB = 0, errorsB = 0, log =[], batterIndexA = 0, batterIndexB = 0;
-  // スタミナリセット + 特能トラッキング初期化（_inningCount: 投手、_gameHits: 打者）
+  let isWalkOffGame = false; // ★ 関数の先頭で isWalkOffGame をあらかじめ安全に宣言します
+  // スタミナリセット + 特能トラッキング初期化
   teamA.pitchers.forEach(p => { p.stamina = p.maxStamina; p._inningCount = 0; });
   teamB.pitchers.forEach(p => { p.stamina = p.maxStamina; p._inningCount = 0; });
   teamA.batters.forEach(b => b._gameHits = 0);
   teamB.batters.forEach(b => b._gameHits = 0);
   applyConstantAbilities(teamA); applyConstantAbilities(teamB);
+  
+  // 🌟 大記録（サイクルヒット／ノーヒットノーラン／完全試合）判定用に、試合開始前の成績を記録しておく
+  // ※statsA/statsBは季間累積データなので、試合前後の差分＝この1試合分の成績になる
+  let snapBattersA = statsA ? statsA.batters.map(b => ({ H: b.H||0, _2B: b._2B||0, _3B: b._3B||0, HR: b.HR||0 })) : null;
+  let snapBattersB = statsB ? statsB.batters.map(b => ({ H: b.H||0, _2B: b._2B||0, _3B: b._3B||0, HR: b.HR||0 })) : null;
+  let snapBbHbpA = statsA ? statsA.pitchers.reduce((s, p) => s + (p.BB||0) + (p.HBP||0), 0) : 0;
+  let snapBbHbpB = statsB ? statsB.pitchers.reduce((s, p) => s + (p.BB||0) + (p.HBP||0), 0) : 0;
   
   let winningPitcherTeam = null, losingPitcherTeam = null;
   let winningPitcherLocalIdx = null, losingPitcherLocalIdx = null;
@@ -4694,6 +5370,8 @@ function simulateGame(teamA, teamB, statsA = null, statsB = null) {
   for (let inning = 1; inning <= 9; inning++) {
     let prevScoreA = scoreA, prevScoreB = scoreB;
     
+    // 1. 表の攻撃（Team A）
+    if (ENABLE_MATCH_LOG && inning > 1) log.push(""); // イニングの間に空行を入れて見やすくする
     if (ENABLE_MATCH_LOG) log.push(`<span style="background:#d0d0d0;padding:2px 6px;border-radius:3px;">${inning}回表 ${teamA.shortName}の攻撃</span>`);
     let resA = simulateHalfInning(teamA, teamB, batterIndexA, ENABLE_MATCH_LOG ? log : null, statsA, statsB, inning, { off: scoreA, def: scoreB }, false);
     scoreA = resA.score.off; hitsA += resA.hits; errorsA += resA.errors; inningsA.push(resA.runs); batterIndexA = resA.nextIndex;
@@ -4707,13 +5385,36 @@ function simulateGame(teamA, teamB, statsA = null, statsB = null) {
       losingPitcherLocalIdx = teamB.pAssign[inning - 1];
     }
     
+    // 9回表終了時に、後攻（Team B）がすでに勝っている場合は試合終了
     if (inning >= 9 && scoreA < scoreB) { inningsB.push("X"); break; }
     
-    if (ENABLE_MATCH_LOG) log.push(`<span style="background:#d0d0d0;padding:2px 6px;border-radius:3px;">${inning}回裏 ${teamB.shortName}の攻撃</span>`);
+    // 📣 表終了から裏開始へのイニングチェンジ実況
+    if (ENABLE_MATCH_LOG && log) {
+      let savedTags = [...currentFlavorTags];
+      currentFlavorTags = [`${inning}回間`, `${inning}回チェンジ`].concat(scoreA === scoreB ? ["同点"] : []);
+      let changeMsg = pickFlavorText("イニング間", true, { SCORE: `${teamA.shortName}${scoreA}-${scoreB}${teamB.shortName}` });
+      currentFlavorTags = savedTags;
+      if (changeMsg) log.push(`<span style="color:#666; font-size:9.5px; font-weight:bold; display:block; margin:6px 0;">📣 ${changeMsg}</span>`);
+    }
+    
+    // 2. 裏の攻撃（Team B）
+    if (ENABLE_MATCH_LOG) log.push(""); // 表と裏の間に空行を入れて見やすくする
+    if (ENABLE_MATCH_LOG) log.push(`<span class="log-inning-header">${inning}回裏 ${teamB.shortName}の攻撃</span>`);
     let resB = simulateHalfInning(teamB, teamA, batterIndexB, ENABLE_MATCH_LOG ? log : null, statsB, statsA, inning, { off: scoreB, def: scoreA }, true);
     scoreB = resB.score.off; hitsB += resB.hits; errorsB += resB.errors; inningsB.push(resB.runs); batterIndexB = resB.nextIndex;
     pitcherAppearancesB.push({inning, pitcherIdx: resB.pitcherIdx, leadEntry: resB.leadEntry, leadExit: resB.leadExit});
     
+    // 📣 裏終了から次のイニング表へのイニングチェンジ実況
+    if (ENABLE_MATCH_LOG && log && (inning < 9 || scoreA === scoreB)) {
+      let savedTags = [...currentFlavorTags];
+      currentFlavorTags = [`${inning}回間`, `${inning}回チェンジ`].concat(scoreA === scoreB ? ["同点"] : []);
+      let changeMsg = pickFlavorText("イニング間", true, { SCORE: `${teamA.shortName}${scoreA}-${scoreB}${teamB.shortName}` });
+      currentFlavorTags = savedTags;
+      if (changeMsg) log.push(`<span style="color:#666; font-size:9.5px; font-weight:bold; display:block; margin:6px 0;">📣 ${changeMsg}</span>`);
+    }
+
+    // 裏の攻撃終了時点でサヨナラ勝ちが成立していたら記録
+    isWalkOffGame = resB.isWalkOff || false;
     
     // 決勝点チェック（裏）
     if (scoreB > scoreA && prevScoreA >= prevScoreB && winningPitcherTeam === null) {
@@ -4723,10 +5424,35 @@ function simulateGame(teamA, teamB, statsA = null, statsB = null) {
       losingPitcherLocalIdx = teamA.pAssign[inning - 1];
     }
     
+    // 9回裏終了時に後攻（Team B）が勝っている場合はサヨナラなどで試合終了
     if (inning >= 9 && scoreB > scoreA) break;
   }
+
   if (ENABLE_MATCH_LOG) log.push(`<b>【試合終了】 ${teamA.shortName} ${scoreA} - ${scoreB} ${teamB.shortName}</b>`);
-  
+
+  // 🌐 【追加】サヨナラ判定も含めた「試合終了時」の劇的なフレーバーテキストの出力
+  if (ENABLE_MATCH_LOG && log) {
+    let finalTags = ["試合終了"];
+    if (isWalkOffGame) finalTags.push("サヨナラ"); // サヨナラ決着時のタグを注入
+    
+    let savedTags = [...currentFlavorTags];
+    currentFlavorTags = finalTags;
+    
+    // 決めた打者と、最後に投げた(浴びた)投手の名前を安全に取得
+    let lastBatterIdx = batterIndexB === 0 ? 8 : batterIndexB - 1;
+    let bName = teamB.batters[lastBatterIdx] ? teamB.batters[lastBatterIdx].displayName : "打者";
+    let lastInning = Math.max(1, inningsA.length); // 実際に消化したイニング数を安全に取得
+    let lastPitcherIdx = teamA.pAssign[lastInning - 1];
+    let pName = teamA.pitchers[lastPitcherIdx] ? teamA.pitchers[lastPitcherIdx].displayName : "投手";
+
+    let endMsg = pickFlavorText("試合終了", true, {
+      B: bName,
+      P: pName,
+      SCORE: `${teamA.shortName}${scoreA}-${scoreB}${teamB.shortName}`
+    });
+    currentFlavorTags = savedTags;
+    if (endMsg) log.push(`<span style="color:#d32f2f; font-weight:bold; font-size:10px; display:block; margin-top:6px;">🏆 ${endMsg}</span>`);
+  }
   // 勝敗判定: 決勝点が入ったイニングの投手に勝敗をつける
   if(scoreA > scoreB && statsA && statsB) {
     if (winningPitcherTeam === 'A' && winningPitcherLocalIdx !== null) {
@@ -4771,7 +5497,34 @@ function simulateGame(teamA, teamB, statsA = null, statsB = null) {
   if (statsA) processHoldsSaves(pitcherAppearancesA, teamA, statsA.pitchers, scoreA > scoreB ? (winningPitcherTeam === 'A' ? winningPitcherLocalIdx : teamA.pAssign[0]) : -1);
   if (statsB) processHoldsSaves(pitcherAppearancesB, teamB, statsB.pitchers, scoreB > scoreA ? (winningPitcherTeam === 'B' ? winningPitcherLocalIdx : teamB.pAssign[0]) : -1);
 
-  return { teamA: teamA.name, teamB: teamB.name, shortA: teamA.shortName, shortB: teamB.shortName, scoreA, scoreB, hitsA, errorsA, hitsB, errorsB, inningsA, inningsB, log };
+  // 🌟 大記録判定①：サイクルヒット（同一試合で単打・二塁打・三塁打・本塁打を全て記録）
+  let cycleHits = [];
+  function checkCycleHits(stats, snapBatters, teamKey) {
+    if (!stats || !snapBatters) return;
+    stats.batters.forEach((b, idx) => {
+      let pre = snapBatters[idx];
+      if (!pre) return;
+      let d2B = (b._2B||0) - pre._2B;
+      let d3B = (b._3B||0) - pre._3B;
+      let dHR = (b.HR||0) - pre.HR;
+      let d1B = ((b.H||0) - pre.H) - d2B - d3B - dHR;
+      if (d1B >= 1 && d2B >= 1 && d3B >= 1 && dHR >= 1) {
+        cycleHits.push({ team: teamKey, idx: idx });
+      }
+    });
+  }
+  checkCycleHits(statsA, snapBattersA, 'A');
+  checkCycleHits(statsB, snapBattersB, 'B');
+
+  // 🌟 大記録判定②：ノーヒットノーラン／完全試合（このシステムでは継投での達成のみ起こりうる）
+  let bbHbpAllowedByA = statsA ? statsA.pitchers.reduce((s, p) => s + (p.BB||0) + (p.HBP||0), 0) - snapBbHbpA : 0;
+  let bbHbpAllowedByB = statsB ? statsB.pitchers.reduce((s, p) => s + (p.BB||0) + (p.HBP||0), 0) - snapBbHbpB : 0;
+  let noHitTeamA = hitsB === 0 && scoreB === 0;   // チームAの継投が、チームBを無安打無得点に抑えた
+  let noHitTeamB = hitsA === 0 && scoreA === 0;   // チームBの継投が、チームAを無安打無得点に抑えた
+  let perfectTeamA = noHitTeamA && bbHbpAllowedByA === 0 && errorsB === 0;
+  let perfectTeamB = noHitTeamB && bbHbpAllowedByB === 0 && errorsA === 0;
+
+  return { teamA: teamA.name, teamB: teamB.name, shortA: teamA.shortName, shortB: teamB.shortName, scoreA, scoreB, hitsA, errorsA, hitsB, errorsB, inningsA, inningsB, log, isWalkOff: isWalkOffGame || false, cycleHits, noHitTeamA, noHitTeamB, perfectTeamA, perfectTeamB };
 }
 
 // ===== 共通定数・wRC+計算ヘルパー =====
@@ -4797,7 +5550,6 @@ function renderMatchTeamTables(myTeam, rivalTeam, statsA, statsB) {
       <span style="font-size:10px;font-weight:bold;">■ ${teamData.name}</span>
       <button class="sm-btn" onclick="showLoadPopup('${isMyTeam?'matchMy':'matchRival'}')">チーム読込</button>
     </div>`;
-    if(isMyTeam) html += `<div id="match-pitcher-assign-ui" style="margin-bottom:2px;"></div>`;
     
     // 野手表
     html += `<table class="result-table match-mini-table">${MATCH_COLGROUP_BATTER}
@@ -4910,7 +5662,6 @@ function renderMatchTeamTables(myTeam, rivalTeam, statsA, statsB) {
   }
   
   container.innerHTML = `<div class="match-mini-table-wrap">${buildTable(myTeam, statsA, true)}${buildTable(rivalTeam, statsB, false)}</div>`;
-  if (matchMyTeam) renderPitcherAssignUI('match', matchMyTeam);
 }
 
 function startMatch(times = 1) {
@@ -4924,11 +5675,18 @@ function startMatch(times = 1) {
   let totalScoreA = 0, totalScoreB = 0, lastRes = null;
 
   ENABLE_MATCH_LOG = (times === 1);
+  // ★ 累積するチーム全体の勝敗数を正しく初期化
+  statsA.w = 0; statsA.l = 0; statsA.d = 0;
+  statsB.w = 0; statsB.l = 0; statsB.d = 0;
   for(let i=0; i<times; i++) {
     lastRes = simulateGame(cloneA, cloneB, statsA, statsB);
     if(!lastRes) break;
     totalScoreA += lastRes.scoreA;
     totalScoreB += lastRes.scoreB;
+    // ★ 1試合ごとの結果に応じてチーム勝敗を正しくカウントする
+    if (lastRes.scoreA > lastRes.scoreB) { statsA.w++; statsB.l++; }
+    else if (lastRes.scoreB > lastRes.scoreA) { statsB.w++; statsA.l++; }
+    else { statsA.d++; statsB.d++; }
   }
   ENABLE_MATCH_LOG = false;
   if(!lastRes) { alert("試合開始エラー"); return; }
@@ -4961,7 +5719,728 @@ function startMatch(times = 1) {
     matchLog.innerHTML = `${times}試合完了。<br><br>マイチーム 平均得点: ${avgScore.toFixed(2)}<br>チーム打率: ${AVG.toFixed(3).replace(/^0/, '')}<br>チームOPS: ${OPS.toFixed(3)}<br><br>ライバルチーム 平均得点: ${(totalScoreB/times).toFixed(2)}<br><br>※各選手の累積個人成績が下に表示されます。`;
     matchLog.scrollTop = 0;
   }
-  renderMatchTeamTables(cloneA, cloneB, statsA, statsB);
+  
+  // 🏆 マイチームとライバルチームのスタッツをペナントと全く同じ形式にマージ
+  let mTeamA = {
+    name: cloneA.name,
+    w: statsA.w || 0, l: statsA.l || 0, d: statsA.d || 0,
+    runsScored: totalScoreA, runsAllowed: totalScoreB,
+    batters: cloneA.batters.map((b, i) => ({ ...b, ...statsA.batters[i] })),
+    pitchers: cloneA.pitchers.map((p, i) => ({ ...p, ...statsA.pitchers[i] }))
+  };
+  let mTeamB = {
+    name: cloneB.name,
+    w: statsB.w || 0, l: statsB.l || 0, d: statsB.d || 0,
+    runsScored: totalScoreB, runsAllowed: totalScoreA,
+    batters: cloneB.batters.map((b, i) => ({ ...b, ...statsB.batters[i] })),
+    pitchers: cloneB.pitchers.map((p, i) => ({ ...p, ...statsB.pitchers[i] }))
+  };
+  matchResults = [mTeamA, mTeamB];
+  
+  // 🏆 共通のWAR/タイトル計算を呼び出し、ペナント用と同等の描画関数で表示
+  if (window.calculateLeagueWAR) {
+    window.calculateLeagueWAR(matchResults);
+  }
+  renderMatchFinalOrderSetup();
+}
+
+// 🏆 ソロ対戦終了後、マイチームとライバルの累積成績をペナントと全く同じ高機能テーブルで描画
+function renderMatchFinalOrderSetup() {
+  const container = document.getElementById("match-teams-info");
+  if (!matchResults) return;
+
+  // ペナントと同様の「チーム選択プルダウン」を作成
+  let orderSelHtml = '<div style="font-size:10px; font-weight:bold; margin-bottom:4px; color:#1a73e8;">■ チーム詳細成績</div>';
+  orderSelHtml += '<select id="match-order-select" onchange="renderMatchFinalOrder()" style="font-size:9.5px; padding:2px 6px; margin-bottom:6px;">';
+  matchResults.forEach((t, i) => {
+    orderSelHtml += `<option value="${i}">${i === 0 ? "★ マイチーム" : "⚡ ライバルチーム"} (${t.name})</option>`;
+  });
+  orderSelHtml += '</select>';
+  
+  // チームサマリー用コンテナと選手別テーブル用コンテナを用意
+  orderSelHtml += `<div id="match-team-stats-summary" style="margin-bottom:8px;"></div>`;
+  orderSelHtml += `<div id="match-order-display"></div>`;
+  
+  container.innerHTML = orderSelHtml;
+  renderMatchFinalOrder();
+}
+
+function renderMatchFinalOrder() {
+  let idx = document.getElementById('match-order-select').value;
+  let team = matchResults[idx];
+  if (!team) return;
+
+  // 1. チーム全体のスタッツサマリー（ペナントと共通関数を使用）
+  const summaryEl = document.getElementById('match-team-stats-summary');
+  if (summaryEl && window.generateTeamSummaryHtml) {
+    summaryEl.innerHTML = window.generateTeamSummaryHtml(team);
+  }
+
+  // 2. 野手オーダーテーブル
+  let fHtml = `<div class="order-sec-label">■ 野手オーダー</div><table class="result-table match-mini-table">${MATCH_COLGROUP_BATTER}
+    <thead><tr>
+      <th style="color:#ffa;">総合</th><th>打/守</th><th>名前</th>
+      <th>ミ</th><th>パ</th><th>走</th><th>肩</th><th style="border-right: 2px solid #000000 !important;">守</th>
+      <th style="border-left:1px solid #aaa;" class="c-rate">率</th>
+      <th class="c-hr">本</th><th class="c-rbi">点</th>
+      <th class="c-sb">盗</th><th class="c-def">守</th><th class="c-def">失</th><th class="c-sb">走</th>
+      <th class="c-rbi">得</th>
+      <th style="border-left:1px solid #aaa;" class="c-rate">出</th>
+      <th style="border-left:1px solid #aaa;" class="c-ops">OPS</th>
+      <th class="c-war">wRC+</th>
+    </tr></thead><tbody>`;
+    
+  team.batters.forEach(b => {
+    if (!b || !b.s) return;
+    let avg = Math.round(b.s.reduce((a,c)=>a+c)/5), [ar,ac] = getRank(avg), pc = posCls(b.defPos);
+    let AVG = b.AB > 0 ? b.H / b.AB : 0;
+    let OBP = b.PA > 0 ? (b.H + b.BB + b.HBP) / b.PA : 0;
+    let SLG = b.AB > 0 ? b.TB / b.AB : 0;
+    let OPS = b.PA > 0 ? (OBP + SLG).toFixed(3) : '-';
+    let WRC = b.PA > 0 ? calcWrcPlus(calcWoba(b), window.leagueAvgWoba || 0.300, window.leagueRPerPA || 0.115) : '-';
+    
+    let avgStr = b.AB > 0 ? AVG.toFixed(3).replace(/^0/,'') || '.000' : '-';
+    let obpStr = b.PA > 0 ? OBP.toFixed(3).replace(/^0/,'') || '.000' : '-';
+    let sbStr = `${b.SB || 0}<span style="font-size:5px;">(${b.CS||0})</span>`;
+
+    let caught = b.CS_Caught || 0;
+    let allowed = b.SB_Allowed || 0;
+    let fpStr = (b.defPos === "捕") ? `<span class="catcher-sb-stat">${(caught + allowed) > 0 ? (caught / (caught + allowed)).toFixed(3).replace(/^0/,'') : '.000'}</span>` : (b.FP || 0);
+    
+    fHtml += `<tr>
+      <td class="result-total" rowspan="2">${rankFmt(ar,ac)}${valFmt(avg)}</td>
+      <td class="result-pos-cell ${pc}" style="white-space:nowrap;font-size:6.5px;">${b.batOrder} ${b.defPos}</td>
+      <td class="res-name-cell ${pc}"><span class="res-name-text under-${b.bat||'R'}">${b.displayName || b.name}</span></td>
+      ${b.s.map((v, sIdx)=>{
+        let[vr,vc]=getRank(v);
+        let borderStyle = sIdx === 4 ? ' style="border-right: 2px solid #000000 !important;"' : '';
+        return `<td class="order-stat"${borderStyle}>${rankFmt(vr,vc)}${valFmt(v)}</td>`;
+      }).join("")}
+      <td style="border-left:1px solid #aaa;" class="c-rate">${avgStr}</td>
+      <td class="c-hr">${b.HR||0}</td>
+      <td class="c-rbi">${b.RBI||0}</td>
+      <td class="c-sb">${sbStr}</td>
+      <td class="c-fp">${fpStr}</td>
+      <td class="c-def">${b.E||0}</td>
+      <td class="c-sb">${b.BR||0}</td>
+      <td class="c-rbi">${b.R||0}</td>
+      <td style="border-left:1px solid #aaa;" class="c-rate">${obpStr}</td>
+      <td style="border-left:1px solid #aaa;" class="c-ops" rowspan="2">${OPS}</td>
+      <td class="c-war" rowspan="2">${WRC}</td>
+    </tr>
+    <tr><td colspan="17" class="result-abi" style="text-align:right;">${abiHtml(b.abi)}</td></tr>`;
+  });
+  fHtml += `</tbody></table>`;
+
+  // 3. 投手オーダーテーブル
+  let pHtml = `<div class="order-sec-label" style="margin-top:8px;">■ 投手オーダー</div><table class="result-table match-mini-table">${MATCH_COLGROUP_PITCHER}
+    <thead><tr>
+      <th style="color:#ffa;">総合</th><th>役割</th><th>名前</th>
+      <th>速</th><th>威</th><th>変</th><th>制</th><th style="border-right: 2px solid #000000 !important;">体</th>
+      <th class="c-rate">防</th><th class="c-rbi">回</th><th class="c-hr">振</th>
+      <th class="c-def">被打</th><th class="c-sb">与四</th><th class="c-def">WHIP</th>
+      <th class="c-hr">勝敗</th>
+      <th class="c-2b">HD</th><th class="c-3b">SV</th>
+      <th class="c-ops">FIP</th>
+    </tr></thead><tbody>`;
+    
+  team.pitchers.forEach(p => {
+    if (!p || !p.s) return;
+    let cs=[cvSpeed(p.s[0]),p.s[1]||0,p.s[2]||0,p.s[3]||0,p.s[4]||0], avg = Math.round(cs.reduce((a,b)=>a+b)/5), [ar,ac]=getRank(avg);
+    
+    let ERA = p.outs > 0 ? (p.ER * 27) / p.outs : 0, eraStr = p.outs === 0 ? "-" : ERA.toFixed(2);
+    let fInn = Math.floor(p.outs / 3), rOut = p.outs % 3;
+    let innStr = fInn + (rOut>0?`<span style="font-size:5px;"> ${rOut}/3</span>`:"");
+    
+    let K = p.SO || 0;
+    let BAVG = p.AB > 0 ? (p.H / p.AB).toFixed(3).replace(/^0/,'') || '.000' : '-';
+    let BB9 = p.outs > 0 ? ((p.BB + p.HBP) * 27 / p.outs).toFixed(2) : '-';
+    let WHIP = p.outs > 0 ? ((p.BB + p.H) * 3 / p.outs).toFixed(2) : '-';
+    let IP_for_fip = p.outs / 3;
+    let FIP = IP_for_fip > 0 ? ((3*(p.BB+p.HBP) - 2*K) / IP_for_fip + 3.0).toFixed(2) : '-';
+    
+    pHtml += `<tr>
+      <td class="result-total" rowspan="2">${rankFmt(ar,ac)}${valFmt(avg)}</td>
+      <td class="result-pos-cell pitcher">${p.role||'?'}</td>
+      <td class="res-name-cell pitcher"><span class="res-name-text under-${p.bat||'R'}">${p.displayName || p.name}</span></td>
+      ${p.s.map((v,j)=>{
+        let sc=j===0?cvSpeed(v):v;
+        let[vr,vc]=getRank(sc);
+        let borderStyle = j === 4 ? ' style="border-right: 2px solid #000000 !important;"' : '';
+        return`<td class="order-stat"${borderStyle}>${rankFmt(vr,vc)}${valFmt(v)}</td>`;
+      }).join("")}
+      <td class="c-rate">${eraStr}</td>
+      <td class="c-rbi">${innStr||'-'}</td>
+      <td class="c-hr">${K}</td>
+      <td class="c-def">${BAVG}</td>
+      <td class="c-sb">${BB9}</td>
+      <td class="c-def">${WHIP}</td>
+      <td class="c-hr">${p.W || 0}-${p.L || 0}</td>
+      <td class="c-2b">${p.HD || 0}</td>
+      <td class="c-3b">${p.SV || 0}</td>
+      <td class="c-ops">${FIP}</td>
+    </tr>
+    <tr><td colspan="17" class="result-abi" style="text-align:right;">${abiHtml(p.abi)}</td></tr>`;
+  });
+  pHtml += `</tbody></table>`;
+  
+  document.getElementById('match-order-display').innerHTML = fHtml + pHtml;
+}
+
+/* ==========================================================================
+   🏆 【新規追加】ペナント日程進行 ＆ 注目ゲーム実況ログ表示コアエンジン 🏆
+   ========================================================================== */
+
+let pennantState = {
+  active: false,
+  currentRound: 0,      // 現在までに消化した節数 (0 〜 totalRounds)
+  totalRounds: 140,      // このシーズンの総節数(常に140)
+  schedule: [],         // 全節の試合スケジュール
+  teamStats: [],        // 各チームの累積成績
+  matchLogs: {},        // キー '節-先攻-後攻' => 注目試合のログ配列
+  bigRecords: []        // 🌟 大記録（サイクルヒット／ノーヒットノーラン／完全試合）の記録一覧
+};
+
+// 対称スケジュールを均等に算出するBergerロジック (ダミー/バイ対応)
+function generateBergerSchedule(N) {
+  let teams = Array.from({length: N}, (_, i) => i);
+  let isOdd = (N % 2 !== 0);
+  if (isOdd) {
+    teams.push(-1); // バイ (お休み枠を追加)
+    N++;
+  }
+  let rounds = [];
+  for (let r = 0; r < N - 1; r++) {
+    let roundMatches = [];
+    for (let i = 0; i < N / 2; i++) {
+      let home = (r + i) % (N - 1);
+      let away = (N - 1 - i + r) % (N - 1);
+      if (i === 0) {
+        away = N - 1;
+      }
+      let hTeam = teams[home];
+      let aTeam = teams[away];
+      if (hTeam !== -1 && aTeam !== -1) {
+        if ((r + i) % 2 === 0) {
+          roundMatches.push({ home: hTeam, away: aTeam });
+        } else {
+          roundMatches.push({ home: aTeam, away: hTeam });
+        }
+      }
+    }
+    rounds.push(roundMatches);
+  }
+  return rounds;
+}
+
+// ★【不具合修正】奇数チーム数だと総当たり表に「お休み(バイ)」枠が入り、
+// 140節すべてが試合にはならず、1チームあたりの試合数が140に届かない(例:7チームだと120試合)。
+// シーズンは必ず140節のまま固定し、代わりに「お休み」になった試合を2つずつ組み合わせて、
+// その節に埋め合わせの試合(その2チーム同士の対戦)を追加することで、全チームが必ず140試合になるようにする。
+// (対戦相手ごとの試合数までは完全に均等にはならない場合があるが、できる限り公平に分配される)
+function computePennantTotalRounds(N, baseRoundsLength) {
+  return 140;
+}
+
+// 140試合分の日程全体の初期化
+function initPennantState(teamsData) {
+  let N = teamsData.length;
+  let baseRounds = generateBergerSchedule(N);
+  let totalRounds = computePennantTotalRounds(N, baseRounds.length);
+  let schedule = [];
+  let byeIncidents = []; // ★奇数チームの場合に発生する「お休み」の一覧 { round, team }
+  
+  for (let r = 0; r < totalRounds; r++) {
+    let baseIdx = r % baseRounds.length;
+    let cycle = Math.floor(r / baseRounds.length);
+    let roundMatches = baseRounds[baseIdx].map(match => {
+      // サイクルごとにホームとアウェイを公平に交代
+      let h = match.home;
+      let a = match.away;
+      if (cycle % 2 === 1) {
+        let tmp = h; h = a; a = tmp;
+      }
+      return {
+        home: h,
+        away: a,
+        isSimulated: false,
+        result: null
+      };
+    });
+    
+    // ★この節で「お休み」になっているチームを特定して記録(奇数チームのみ発生)
+    if (N % 2 !== 0) {
+      let playingTeams = new Set();
+      roundMatches.forEach(m => { playingTeams.add(m.home); playingTeams.add(m.away); });
+      for (let t = 0; t < N; t++) {
+        if (!playingTeams.has(t)) { byeIncidents.push({ round: r, team: t }); break; }
+      }
+    }
+    
+    schedule.push(roundMatches);
+  }
+  
+  // ★「お休み」を2つずつ組み合わせ、その節に埋め合わせの対戦を追加する
+  // (例: 第5節でお休みのAチームと、第12節でお休みのBチームを組ませて、第5節にA対Bの試合を追加)
+  for (let i = 0; i + 1 < byeIncidents.length; i += 2) {
+    let inc1 = byeIncidents[i], inc2 = byeIncidents[i + 1];
+    if (inc1.team === inc2.team) continue; // 同じチーム同士は組めないので安全のため何もしない
+    schedule[inc1.round].push({
+      home: inc1.team,
+      away: inc2.team,
+      isSimulated: false,
+      result: null
+    });
+  }
+
+  // チーム成績の初期化
+  let teamStats = teamsData.map((team, idx) => {
+    let stats = createEmptyStats();
+    stats.idx = idx; stats.name = team.name; stats.shortName = team.shortName;
+    stats.w = 0; stats.l = 0; stats.d = 0; stats.runsScored = 0; stats.runsAllowed = 0;
+    stats.batters = team.batters.map((b, i) => ({ ...stats.batters[i], ...b, teamIdx: idx, idx: i, s: b.s || [50,50,50,50,50], bat: b.bat || "R", batOrder: b.batOrder || String(i+1), defPos: b.defPos || "指", abi: b.abi || {}, displayName: b.displayName || b.name }));
+    stats.pitchers = team.pitchers.map((p, i) => ({ ...stats.pitchers[i], ...p, teamIdx: idx, idx: i, s: p.s || [145,50,50,50,50], bat: p.bat || "R", abi: p.abi || {}, displayName: p.displayName || p.name, role: getPitcherRoleStr(i, team.pAssign) }));
+    return stats;
+  });
+
+  pennantState = {
+    active: true,
+    currentRound: 0,
+    totalRounds: totalRounds, // ★このシーズンの総節数(常に140)
+    schedule: schedule,
+    teamStats: teamStats,
+    matchLogs: {},
+    bigRecords: []
+  };
+}
+
+// チーム準備用初期化ヘルパー
+function buildPennantTeamsData() {
+  pennantTeams = pennantSelectedSlots.map((val, idx) => {
+    if (val !== "") {
+      let slot = parseInt(val);
+      let raw = localStorage.getItem(SAVE_KEY + slot);
+      if (raw) {
+        let data = JSON.parse(raw);
+        return createTeamFromData(data, data.teamName || `Team ${slot}`, false);
+      }
+    }
+    let defTeam = createDefaultMatchTeam(true);
+    defTeam.name = `オールD${idx + 1}`;
+    defTeam.shortName = `D${idx + 1}`;
+    return defTeam;
+  });
+  
+  let nameCounts = {};
+  pennantTeams.forEach(t => { let baseName = t.name.replace(/[A-F]$/, ''); nameCounts[baseName] = (nameCounts[baseName] || 0) + 1; });
+  let nameSuffix = {};
+  pennantTeams.forEach((t) => {
+    let baseName = t.name.replace(/[A-F]$/, '');
+    if (nameCounts[baseName] > 1) {
+      if (!nameSuffix[baseName]) nameSuffix[baseName] = 0;
+      t.name = baseName + String.fromCharCode(65 + nameSuffix[baseName]);
+      t.shortName = t.name.slice(0, 5);
+      nameSuffix[baseName]++;
+    }
+  });
+}
+
+// ボタン押下時：「1/4進行」のコア実行ロジック
+function startPennantStep() {
+  buildPennantTeamsData();
+  initPennantState(pennantTeams);
+  populatePennantResultSelect();
+  
+  document.getElementById('pennant-setup').style.display = 'none';
+  document.getElementById('pennant-results').style.display = 'block';
+  
+  runPennantStep(35); // 最初の35節を実行
+}
+
+function nextPennantStep() {
+  if (!pennantState || !pennantState.active || pennantState.currentRound >= pennantState.totalRounds) {
+    // 全節終了か未開始ならリセットして再スタート
+    startPennantStep();
+    return;
+  }
+  runPennantStep(35); // 次の35節を実行
+}
+
+// 指定した節数を一気に進行する
+function runPennantStep(roundsToRun) {
+  let targetRound = Math.min(pennantState.totalRounds, pennantState.currentRound + roundsToRun);
+  let startRound = pennantState.currentRound;
+  
+  for (let r = startRound; r < targetRound; r++) {
+    let roundMatches = pennantState.schedule[r];
+    // 開幕戦(1), 第36節, 第71節, 最終戦 ─ インデックス 0, 35, 70, (totalRounds-1)
+    let isFeaturedRound = (r === 0 || r === 35 || r === 70 || r === pennantState.totalRounds - 1);
+    
+    roundMatches.forEach(match => {
+      let teamA = pennantTeams[match.home];
+      let teamB = pennantTeams[match.away];
+      let statsA = pennantState.teamStats[match.home];
+      let statsB = pennantState.teamStats[match.away];
+      
+      // 注目ゲームの日程のみ実況詳細ログをバインドする
+      ENABLE_MATCH_LOG = isFeaturedRound;
+      
+      let res = simulateGame(JSON.parse(JSON.stringify(teamA)), JSON.parse(JSON.stringify(teamB)), statsA, statsB);
+      if (!res) return;
+      
+      statsA.runsScored += res.scoreA; statsA.runsAllowed += res.scoreB;
+      statsB.runsScored += res.scoreB; statsB.runsAllowed += res.scoreA;
+      
+      if (res.scoreA > res.scoreB) { statsA.w++; statsB.l++; }
+      else if (res.scoreB > res.scoreA) { statsB.w++; statsA.l++; }
+      else { statsA.d++; statsB.d++; }
+      
+      match.isSimulated = true;
+      match.result = {
+        scoreA: res.scoreA,
+        scoreB: res.scoreB,
+        hitsA: res.hitsA,
+        hitsB: res.hitsB,
+        errorsA: res.errorsA,
+        errorsB: res.errorsB,
+        inningsA: res.inningsA,
+        inningsB: res.inningsB,
+        isWalkOff: res.isWalkOff || false
+      };
+      
+      if (isFeaturedRound && res.log) {
+        let key = `${r}-${match.home}-${match.away}`;
+        pennantState.matchLogs[key] = res.log;
+      }
+      
+      // 🌟 大記録（サイクルヒット／ノーヒットノーラン／完全試合）をリーグ表彰欄用に記録
+      if (res.cycleHits && res.cycleHits.length > 0) {
+      // 🛡️ 安全対策：受け皿がnullの場合はその場で初期化する
+        if (!pennantState.bigRecords) pennantState.bigRecords = [];
+        res.cycleHits.forEach(c => {
+          let teamIdx = c.team === 'A' ? match.home : match.away;
+          let player = pennantState.teamStats[teamIdx].batters[c.idx];
+          pennantState.bigRecords.push({
+            type: 'cycle',
+            round: r,
+            playerName: player ? (player.displayName || player.name) : '?',
+            teamName: pennantState.teamStats[teamIdx].name
+          });
+        });
+      }
+      // 🛡️ 安全対策：受け皿がnullの場合はその場で初期化する
+      if (!pennantState.bigRecords) pennantState.bigRecords = [];
+
+      if (res.perfectTeamA) {
+        pennantState.bigRecords.push({ type: 'perfect', round: r, teamName: pennantState.teamStats[match.home].name });
+      } else if (res.noHitTeamA) {
+        pennantState.bigRecords.push({ type: 'nohitter', round: r, teamName: pennantState.teamStats[match.home].name });
+      }
+      if (res.perfectTeamB) {
+        pennantState.bigRecords.push({ type: 'perfect', round: r, teamName: pennantState.teamStats[match.away].name });
+      } else if (res.noHitTeamB) {
+        pennantState.bigRecords.push({ type: 'nohitter', round: r, teamName: pennantState.teamStats[match.away].name });
+      }
+    });
+  }
+  
+  pennantState.currentRound = targetRound;
+  ENABLE_MATCH_LOG = false;
+  
+  // ソートして順位決定
+  updatePennantStandingsAndRender();
+}
+
+// 既存「ペナント開始」ボタンとの接続 (全節を一気にシミュレート)
+function startPennant() {
+  buildPennantTeamsData();
+  initPennantState(pennantTeams);
+  populatePennantResultSelect();
+  
+  document.getElementById('pennant-setup').style.display = 'none';
+  document.getElementById('pennant-results').style.display = 'block';
+  
+  runPennantStep(pennantState.totalRounds); // 全節一気に実行！
+}
+
+function updatePennantStandingsAndRender() {
+  pennantResults = [...pennantState.teamStats].sort((a, b) => {
+    let wpA = a.w + a.l > 0 ? a.w / (a.w + a.l) : 0;
+    let wpB = b.w + b.l > 0 ? b.w / (b.w + b.l) : 0;
+    if (wpA !== wpB) return wpB - wpA;
+    if (a.w !== b.w) return b.w - a.w;
+    return a.name.localeCompare(b.name);
+  });
+  
+  calculateLeagueWAR(pennantResults);
+  
+  // 個人タイトル・表彰制限等の再走
+  if (typeof calculateLeagueTitleLimits === 'function') {
+    calculateLeagueTitleLimits(pennantResults);
+  }
+  
+  renderPennantResults(); 
+  renderPennantMatchResults(); // 試合結果一覧の描画
+  
+  let cat = document.getElementById('leader-category');
+  if (cat) renderLeaders();
+  
+  let awardsSelect = document.getElementById('pennant-awards-select');
+  if (awardsSelect) renderAwards();
+  
+  // チーム詳細オーダーセクションのプルダウン更新
+  var orderSelHtml = '<select id="final-order-select" onchange="renderFinalOrder()">';
+  pennantResults.forEach(function(t, i) {
+    orderSelHtml += '<option value="' + i + '">' + (i+1) + '. ' + t.name + '</option>';
+  });
+  orderSelHtml += '</select>';
+  document.getElementById('pennant-order-select').innerHTML = orderSelHtml;
+  renderFinalOrder();
+}
+
+// 結果選択用の各チーム別動的オプション生成
+function populatePennantResultSelect() {
+  const select = document.getElementById('pennant-result-select');
+  if (!select || !pennantState) return;
+  
+  select.innerHTML = `
+    <option value="featured">注目ゲーム (開幕・36・71・最終戦)</option>
+    <option value="r1_35">第1節 〜 第35節</option>
+    <option value="r36_70">第36節 〜 第70節</option>
+    <option value="r71_105">第71節 〜 第105節</option>
+    <option value="r106_140">第106節 〜 第140節</option>
+  `;
+  
+  pennantState.teamStats.forEach((t, i) => {
+    let opt = document.createElement('option');
+    opt.value = `team-${i}`;
+    opt.textContent = `${t.name} の140試合結果`;
+    select.appendChild(opt);
+  });
+}
+
+// 各節日程 ＆ 2列注目ゲームの描画
+function renderPennantMatchResults() {
+  if (!pennantState || !pennantState.active) return;
+  const selectVal = document.getElementById('pennant-result-select').value;
+  const displayEl = document.getElementById('pennant-match-results-display');
+  if (!displayEl) return;
+
+  let html = '';
+  
+  if (selectVal === 'featured') {
+    // 注目ゲーム：開幕戦, 36節, 71節, 最終戦(インデックス 0, 35, 70, 139)
+    let featuredRounds = [
+      { label: "開幕戦", roundIdx: 0 },
+      { label: "第36試合目", roundIdx: 35 },
+      { label: "第71試合目", roundIdx: 70 },
+      { label: "最終戦", roundIdx: 139 }
+    ];
+    
+    html = `<div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">`;
+    featuredRounds.forEach(fr => {
+      if (fr.roundIdx >= pennantState.currentRound) {
+        html += `<div style="background:#f9f9f9; border:1px solid #ddd; padding:4px; border-radius:4px; min-height:50px;">
+          <div style="font-weight:bold; color:#f57c00; border-bottom:1px solid #ddd; margin-bottom:3px; font-size:7.5px;">${fr.label} (未進行)</div>
+        </div>`;
+        return;
+      }
+      
+      let roundMatches = pennantState.schedule[fr.roundIdx];
+      let matchesHtml = roundMatches.map(match => {
+        let nameA = pennantState.teamStats[match.home].name;
+        let nameB = pennantState.teamStats[match.away].name;
+        let scoreA = match.result.scoreA;
+        let scoreB = match.result.scoreB;
+        let isWalkOff = match.result.isWalkOff;
+        
+        // 🏆 勝利＝赤(#d32f2f)、敗北＝青(#1976d2) の色分けスタイルを生成
+        let clsA = "color:#333;", clsB = "color:#333;";
+        if (scoreA > scoreB) {
+          clsA = "color:#d32f2f; font-weight:bold;";
+          clsB = "color:#1976d2;";
+        } else if (scoreB > scoreA) {
+          clsA = "color:#1976d2;";
+          clsB = "color:#d32f2f; font-weight:bold;";
+        }
+        let scoreStr = `<span style="${clsA}">${scoreA}</span>-<span style="${clsB}">${scoreB}</span>${isWalkOff ? '<span style="color:#d32f2f; font-weight:bold;">×</span>' : ''}`;
+        let key = `${fr.roundIdx}-${match.home}-${match.away}`;
+        let hasLog = !!pennantState.matchLogs[key];
+        
+        if (hasLog) {
+          return `<div onclick="showPennantMatchLog('${key}', '${nameA} vs ${nameB}')" style="cursor:pointer; display:inline-block; background:#fff8e1; border:1px solid #ffe082; padding:1.5px 3px; border-radius:2px; margin:1.5px; font-size:7px; font-weight:bold; color:#b58900;">
+            ${nameA} ${scoreStr} ${nameB} 📝
+          </div>`;
+        } else {
+          return `<div style="display:inline-block; background:#f5f5f5; border:1px solid #e0e0e0; padding:1.5px 3px; border-radius:2px; margin:1.5px; font-size:7px; color:#666;">
+            ${nameA} ${scoreStr} ${nameB}
+          </div>`;
+        }
+      }).join(' ');
+      
+      html += `<div style="background:#fcfcfc; border:1px solid #ddd; padding:4px; border-radius:4px;">
+        <div style="font-weight:bold; color:#e65100; border-bottom:1px solid #ddd; margin-bottom:3px; font-size:7.5px; display:flex; justify-content:space-between;">
+          <span>${fr.label}</span>
+          <span style="font-size:5.5px; color:#aaa;">※枠タップで実況ログ表示</span>
+        </div>
+        <div style="line-height:1.4;">${matchesHtml}</div>
+      </div>`;
+    });
+    html += `</div>`;
+    
+  } else if (selectVal.startsWith('team-')) {
+    let teamIdx = parseInt(selectVal.split('-')[1]);
+    let tName = pennantState.teamStats[teamIdx].name;
+    html = `<div style="font-weight:bold; font-size:8.5px; color:#333; margin-bottom:4px; border-bottom:1px solid #ddd; padding-bottom:2px;">■ ${tName} の対戦結果一覧 (進行分のみ)</div>`;
+    html += `<div style="display:flex; flex-wrap:wrap; gap:2.5px; max-height:150px; overflow-y:auto; padding-right:4px;">`;
+    
+    let simulatedCount = 0;
+    for (let r = 0; r < pennantState.currentRound; r++) {
+      let roundMatches = pennantState.schedule[r];
+      let match = roundMatches.find(m => m.home === teamIdx || m.away === teamIdx);
+      if (match && match.isSimulated) {
+        simulatedCount++;
+        let oppIdx = match.home === teamIdx ? match.away : match.home;
+        let oppName = pennantState.teamStats[oppIdx].name;
+        let isHome = match.home === teamIdx;
+        let scoreSelf = isHome ? match.result.scoreA : match.result.scoreB;
+        let scoreOpp = isHome ? match.result.scoreB : match.result.scoreA;
+        let isWalkOff = match.result.isWalkOff;
+        let outcome = scoreSelf > scoreOpp ? '〇' : scoreSelf < scoreOpp ? '●' : '引';
+        let outcomeColor = scoreSelf > scoreOpp ? '#d32f2f' : scoreSelf < scoreOpp ? '#1976d2' : '#757575';
+        
+        let isFeatured = (r === 0 || r === 35 || r === 70 || r === 139);
+        let key = `${r}-${match.home}-${match.away}`;
+        let hasLog = isFeatured && !!pennantState.matchLogs[key];
+        
+        // 🏆 自分＝左側、相手＝右側として、勝敗を赤と青で得点色分け
+        let clsS = "color:#333;", clsO = "color:#333;";
+        if (scoreSelf > scoreOpp) {
+          clsS = "color:#d32f2f; font-weight:bold;";
+          clsO = "color:#1976d2;";
+        } else if (scoreOpp > scoreSelf) {
+          clsS = "color:#1976d2;";
+          clsO = "color:#d32f2f; font-weight:bold;";
+        }
+        let scoreStr = `<span style="${clsS}">${scoreSelf}</span>-<span style="${clsO}">${scoreOpp}</span>${isWalkOff ? '<span style="color:#d32f2f; font-weight:bold;">×</span>' : ''}`;
+        let displayStr = `${simulatedCount}戦: <span style="color:${outcomeColor}; font-weight:bold;">${outcome}</span> ${isHome ? 'vs':'@'}${oppName} (${scoreStr})`;
+        
+        if (hasLog) {
+          html += `<div onclick="showPennantMatchLog('${key}', '${tName} vs ${oppName}')" style="cursor:pointer; font-size:6.5px; background:#fff8e1; border:1px solid #e2c070; padding:1.5px 4px; border-radius:3px; font-weight:bold; color:#7d5c1a; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${displayStr} 📝</div>`;
+        } else {
+          html += `<div style="font-size:6.5px; background:#fff; border:1px solid #ccc; padding:1px 4px; border-radius:3px; color:#333;">${displayStr}</div>`;
+        }
+      }
+    }
+    if (simulatedCount === 0) {
+      html += `<div style="font-size:7px; color:#888;">試合はまだ行われていません</div>`;
+    }
+    html += `</div>`;
+    
+  } else {
+    let bounds = {
+      r1_35: { start: 0, end: 35 },
+      r36_70: { start: 35, end: 70 },
+      r71_105: { start: 70, end: 105 },
+      r106_140: { start: 105, end: 140 }
+    }[selectVal];
+    
+    if (bounds) {
+      html = `<div style="max-height:150px; overflow-y:auto; padding-right:4px;">`;
+      for (let r = bounds.start; r < bounds.end; r++) {
+        if (r >= pennantState.currentRound) {
+          html += `<div style="margin-bottom:4px; padding-bottom:2px; border-bottom:1px dashed #eee;">
+            <span style="font-weight:bold; color:#777; font-size:7.5px;">第${r+1}試合 (未進行)</span> <!-- ★「試合」に変更 -->
+          </div>`;
+          continue;
+        }
+        
+       let roundMatches = pennantState.schedule[r];
+      let matchesHtml = roundMatches.map(match => {
+        let nameA = pennantState.teamStats[match.home].name;
+        let nameB = pennantState.teamStats[match.away].name;
+        let scoreA = match.result.scoreA;
+        let scoreB = match.result.scoreB;
+        let isWalkOff = match.result.isWalkOff;
+        
+        // 🏆 勝利＝赤(#d32f2f)、敗北＝青(#1976d2) の色分けスタイルを生成
+        let clsA = "color:#333;", clsB = "color:#333;";
+        if (scoreA > scoreB) {
+          clsA = "color:#d32f2f; font-weight:bold;";
+          clsB = "color:#1976d2;";
+        } else if (scoreB > scoreA) {
+          clsA = "color:#1976d2;";
+          clsB = "color:#d32f2f; font-weight:bold;";
+        }
+        let scoreStr = `<span style="${clsA}">${scoreA}</span>-<span style="${clsB}">${scoreB}</span>${isWalkOff ? '<span style="color:#d32f2f; font-weight:bold;">×</span>' : ''}`;
+        
+        let key = `${r}-${match.home}-${match.away}`;
+        let hasLog = !!pennantState.matchLogs[key];
+        
+        if (hasLog) {
+          // 🏆 視認性が高く落ち着いた色合い（金茶ベース）に再調整
+          return `<div onclick="showPennantMatchLog('${key}', '${nameA} vs ${nameB}')" style="cursor:pointer; display:inline-block; background:#fff8e1; border:1px solid #e2c070; padding:1.5px 4px; border-radius:3px; margin:1.5px; font-size:7.5px; font-weight:bold; color:#7d5c1a; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+            ${nameA} ${scoreStr} ${nameB} 📝
+          </div>`;
+        } else {
+          return `<div style="display:inline-block; background:#f5f5f5; border:1px solid #e0e0e0; padding:1.5px 4px; border-radius:3px; margin:1.5px; font-size:7.5px; color:#555;">
+            ${nameA} ${scoreStr} ${nameB}
+          </div>`;
+        }
+      }).join(' ');
+        
+        html += `<div style="margin-bottom:4px; padding-bottom:2px; border-bottom:1px dashed #eee;">
+          <div style="font-weight:bold; color:#1a73e8; font-size:7.5px; margin-bottom:2px;">第${r+1}試合</div> <!-- ★「試合」に変更 -->
+          <div style="line-height:1.4;">${matchesHtml}</div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+  }
+  displayEl.innerHTML = html;
+}
+
+// ポップアップ詳細ログ表示制御
+function showPennantMatchLog(key, title) {
+  const popup = document.getElementById('pennant-log-popup');
+  const titleEl = document.getElementById('pennant-log-title');
+  const contentEl = document.getElementById('pennant-log-content');
+  const scoreEl = document.getElementById('pennant-log-score');
+  if (!popup || !pennantState) return;
+  
+  let logData = pennantState.matchLogs[key];
+  if (!logData) return;
+  
+  titleEl.textContent = `📋 試合実況ログ [${title}]`;
+  contentEl.innerHTML = logData.join("<br>");
+  
+  // 🆕 ソロ対戦と同じ形式のスコアボードを、スクロールしない上部エリアに表示
+  if (scoreEl) {
+    let [r, home, away] = key.split('-').map(Number);
+    let match = pennantState.schedule[r] && pennantState.schedule[r].find(m => (m.home === home && m.away === away) || (m.home === away && m.away === home));
+    if (match && match.result) {
+      let res = match.result;
+      let shortA = pennantState.teamStats[home].shortName;
+      let shortB = pennantState.teamStats[away].shortName;
+      let drawInning = (arr) => (arr || []).map(s => `<td>${s}</td>`).join("");
+      scoreEl.innerHTML = `<table class="result-table" style="font-size:9px; font-weight:bold; width:100%;">
+        <thead><tr><th>チーム</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th style="color:#ff4444;">計</th><th>H</th><th>E</th></tr></thead>
+        <tbody>
+          <tr><td>${shortA}</td>${drawInning(res.inningsA)}<td style="color:#ff4444;">${res.scoreA}</td><td>${res.hitsA}</td><td>${res.errorsA}</td></tr>
+          <tr><td>${shortB}</td>${drawInning(res.inningsB)}<td style="color:#ff4444;">${res.scoreB}</td><td>${res.hitsB}</td><td>${res.errorsB}</td></tr>
+        </tbody>
+      </table>`;
+    } else {
+      scoreEl.innerHTML = '';
+    }
+  }
+  
+  popup.style.display = 'flex';
+}
+
+function closePennantLogPopup() {
+  const popup = document.getElementById('pennant-log-popup');
+  if (popup) popup.style.display = 'none';
 }
 
 /* =============================================
@@ -5057,82 +6536,9 @@ function addPennantTeamRow() {
   document.getElementById('pennant-results').style.display = 'none';
 }
 
-function startPennant() {
-  // 動的リストから各チームを構築
-  pennantTeams = pennantSelectedSlots.map((val, idx) => {
-    if (val !== "") {
-      let slot = parseInt(val);
-      let raw = localStorage.getItem(SAVE_KEY + slot);
-      if (raw) {
-        let data = JSON.parse(raw);
-        return createTeamFromData(data, data.teamName || `Team ${slot}`, false);
-      }
-    }
-    // 未選択または該当スロット空っぽ時はデフォルトのオールDチームを生成
-    let defTeam = createDefaultMatchTeam(true);
-    defTeam.name = `オールD${idx + 1}`;
-    defTeam.shortName = `D${idx + 1}`;
-    return defTeam;
-  });
-  
-  // 名前の重複自動解決
-  let nameCounts = {};
-  pennantTeams.forEach(t => { let baseName = t.name.replace(/[A-F]$/, ''); nameCounts[baseName] = (nameCounts[baseName] || 0) + 1; });
-  let nameSuffix = {};
-  pennantTeams.forEach((t) => {
-    let baseName = t.name.replace(/[A-F]$/, '');
-    if (nameCounts[baseName] > 1) {
-      if (!nameSuffix[baseName]) nameSuffix[baseName] = 0;
-      t.name = baseName + String.fromCharCode(65 + nameSuffix[baseName]);
-      t.shortName = t.name.slice(0, 5);
-      nameSuffix[baseName]++;
-    }
-  });
-
-  // 140試合固定対称スケジュールを取得
-  let N = pennantTeams.length;
-  let matchupMatrix = getMatchupMatrix(N);
-
-  let teamStats = pennantTeams.map((team, idx) => {
-    let stats = createEmptyStats();
-    stats.idx = idx; stats.name = team.name; stats.shortName = team.shortName;
-    stats.w = 0; stats.l = 0; stats.d = 0; stats.runsScored = 0; stats.runsAllowed = 0;
-    stats.batters = team.batters.map((b, i) => ({ ...stats.batters[i], ...b, teamIdx: idx, idx: i, s: b.s || [50,50,50,50,50], bat: b.bat || "R", batOrder: b.batOrder || String(i+1), defPos: b.defPos || "指", abi: b.abi || {}, displayName: b.displayName || b.name }));
-    stats.pitchers = team.pitchers.map((p, i) => ({ ...stats.pitchers[i], ...p, teamIdx: idx, idx: i, s: p.s || [145,50,50,50,50], bat: p.bat || "R", abi: p.abi || {}, displayName: p.displayName || p.name, role: getPitcherRoleStr(i, team.pAssign) }));
-    return stats;
-  });
-
-  // 計算された対戦マトリクスに従ってペナントシミュレーション
-  for (let i = 0; i < N; i++) {
-    for (let j = i + 1; j < N; j++) {
-      let gamesCount = matchupMatrix[i][j];
-      let teamA = pennantTeams[i], teamB = pennantTeams[j];
-      let statsA = teamStats[i], statsB = teamStats[j];
-      for (let g = 0; g < gamesCount; g++) {
-        ENABLE_MATCH_LOG = false;
-        let res = simulateGame(JSON.parse(JSON.stringify(teamA)), JSON.parse(JSON.stringify(teamB)), statsA, statsB);
-        if (!res) continue;
-        statsA.runsScored += res.scoreA; statsA.runsAllowed += res.scoreB;
-        statsB.runsScored += res.scoreB; statsB.runsAllowed += res.scoreA;
-        if (res.scoreA > res.scoreB) { statsA.w++; statsB.l++; }
-        else if (res.scoreB > res.scoreA) { statsB.w++; statsA.l++; }
-        else { statsA.d++; statsB.d++; }
-      }
-    }
-  }
-
-  pennantResults = teamStats.sort((a, b) => {
-    let wpA = a.w + a.l > 0 ? a.w / (a.w + a.l) : 0;
-    let wpB = b.w + b.l > 0 ? b.w / (b.w + b.l) : 0;
-    if (wpA !== wpB) return wpB - wpA;
-    if (a.w !== b.w) return b.w - a.w;
-    return a.name.localeCompare(b.name);
-  });
-
-  document.getElementById('pennant-setup').style.display = 'none';
-  document.getElementById('pennant-results').style.display = 'block';
-  renderPennantResults();
-}
+// ★旧版のstartPennant()はここにありましたが、スケジュール管理(pennantState)に対応しておらず
+// 「試合結果一覧」やサイクルヒット等の大記録判定が動作しない原因になっていたため削除し、
+// 上の(initPennantStateを使う)新版のstartPennant()に一本化しました。
 
 function resetPennant() {
   pennantResults = null; pennantTeams = [];
@@ -5188,14 +6594,41 @@ function updateLeagueAvgDisplay(cat) {
   document.getElementById('league-avg-stats').innerHTML = avgHtml;
 }
 
+/* ==========================================================================
+   ▼ 【修正】ペナント結果テーブルレンダリング（完全固定幅＆余白最小化）
+   ========================================================================== */
 function renderPennantResults() {
   if (!pennantResults) return;
   
   let leader = pennantResults[0];
   let standingBg = ['','standing-1','standing-2','standing-3','standing-4','standing-5','standing-6'];
   
-  let standingsHtml = `<table class="result-table" style="font-size:7px;">
-    <thead><tr><th>順</th><th>チーム</th><th>勝</th><th>敗</th><th>分</th><th>勝率</th><th>差</th><th>得点</th><th>失点</th><th>OPS</th></tr></thead><tbody>`;
+  // 📝 列幅をパーセンテージとpxできっちり固定
+  let standingsHtml = `<table class="result-table pennant-standings-table">
+    <colgroup>
+      <col style="width:14px;">  <!-- 順 -->
+      <col style="width:75px;">  <!-- チーム（最低6文字幅をキープ） -->
+      <col style="width:18px;">  <!-- 勝 -->
+      <col style="width:18px;">  <!-- 敗 -->
+      <col style="width:16px;">  <!-- 分 -->
+      <col style="width:26px;">  <!-- 勝率 -->
+      <col style="width:18px;">  <!-- 差 -->
+      <col style="width:22px;">  <!-- 得点 -->
+      <col style="width:22px;">  <!-- 失点 -->
+      <col style="width:24px;">  <!-- OPS -->
+    </colgroup>
+    <thead><tr>
+      <th class="pst-main">順</th>
+      <th class="pst-main">チーム</th>
+      <th class="pst-main">勝</th>
+      <th class="pst-main">敗</th>
+      <th>分</th>
+      <th class="pst-main">勝率</th>
+      <th>差</th>
+      <th>得</th>
+      <th>失</th>
+      <th>OPS</th>
+    </tr></thead><tbody>`;
   
   pennantResults.forEach((t, i) => {
     let wp = t.w + t.l > 0 ? t.w / (t.w + t.l) : 0;
@@ -5213,49 +6646,64 @@ function renderPennantResults() {
     let teamSLG = teamTotalAB > 0 ? teamTotalTB / teamTotalAB : 0;
     let teamOPS = teamOBP + teamSLG;
     
-    standingsHtml += `<tr class="${standingBg[i+1]||''}"><td>${i+1}</td><td>${t.name}</td><td>${t.w}</td><td>${t.l}</td><td>${t.d}</td><td>${wp.toFixed(3)}</td><td>${gb}</td><td>${avgR}</td><td>${avgRA}</td><td>${teamOPS.toFixed(3)}</td></tr>`;
+    standingsHtml += `<tr class="${standingBg[i+1]||''}">
+      <td class="pst-main">${i+1}</td>
+      <td class="pst-main" style="text-align:left !important; padding-left:3px !important;">${t.name}</td>
+      <td class="pst-main">${t.w}</td>
+      <td class="pst-main">${t.l}</td>
+      <td>${t.d}</td>
+      <td class="pst-main">${wp.toFixed(3)}</td>
+      <td>${gb}</td>
+      <td>${avgR}</td>
+      <td>${avgRA}</td>
+      <td>${teamOPS.toFixed(3)}</td>
+    </tr>`;
   });
   standingsHtml += `</tbody></table>`;
   document.getElementById('pennant-standings').innerHTML = standingsHtml;
 
-  var selectHtml = '<select id="leader-category" onchange="renderLeaders();updateLeagueAvgDisplay(this.value);">' +
-    '<optgroup label="野手">' +
-      '<option value="AVG">打率</option>' +
-      '<option value="HR">本塁打</option>' +
-      '<option value="RBI">打点</option>' +
-      '<option value="R">得点</option>' +
-      '<option value="OPS">OPS</option>' +
-      '<option value="WRCPLUS">wRC+</option>' +
-      '<option value="SB">盗塁</option>' +
-      '<option value="CS">盗塁失敗</option>' +
-      '<option value="BR">好走</option>' +
-      '<option value="FP">好守</option>' +
-      '<option value="SO">三振数</option>' +
-      '<option value="E">失策</option>' +
-      '<option value="BB">四球</option>' +
-      '<option value="PA">打席数</option>' +
-      '<option value="OBP">出塁率</option>' +
-      '<option value="SLG">長打率</option>' +
-      '<option value="RISP">得点圏打率</option>' +
-      '<option value="_2B">二塁打</option>' +
-      '<option value="_3B">三塁打</option>' +
-      '<option value="bWAR">野手簡易WAR</option>' +
-    '</optgroup>' +
-    '<optgroup label="投手">' +
-      '<option value="ERA">防御率</option>' +
-      '<option value="W">勝利数</option>' +
-      '<option value="L">敗戦数</option>' +
-      '<option value="IP">投球回</option>' +
-      '<option value="SO9">奪三振率</option>' +
-      '<option value="WHIP">WHIP</option>' +
-      '<option value="BB9">与四球率</option>' +
-      '<option value="BAVG">被打率</option>' +
-      '<option value="FIP">FIP</option>' +
-      '<option value="HD">ホールド</option>' +
-      '<option value="SV">セーブ</option>' +
-      '<option value="pWAR">投手簡易WAR</option>' +
-    '</optgroup>' +
-  '</select>';
+  // 📝 文字列連結バグをテンプレートリテラルで100%解決
+  var selectHtml = `
+  <select id="leader-category" onchange="renderLeaders();updateLeagueAvgDisplay(this.value);">
+    <optgroup label="野手">
+      <option value="AVG">打率</option>
+      <option value="HR">本塁打</option>
+      <option value="RBI">打点</option>
+      <option value="R">得点</option>
+      <option value="OPS">OPS</option>
+      <option value="WRCPLUS">wRC+</option>
+      <option value="SB">盗塁</option>
+      <option value="CS">盗塁失敗</option>
+      <option value="BR">好走</option>
+      <option value="FP">好守</option>
+      <option value="CS_RATE">盗塁阻止率</option>
+      <option value="SO">三振数</option>
+      <option value="E">失策</option>
+      <option value="BB">四球</option>
+      <option value="PA">打席数</option>
+      <option value="OBP">出塁率</option>
+      <option value="SLG">長打率</option>
+      <option value="RISP">得点圏打率</option>
+      <option value="_2B">二塁打</option>
+      <option value="_3B">三塁打</option>
+      <option value="bWAR">野手簡易WAR</option>
+    </optgroup>
+    <optgroup label="投手">
+      <option value="ERA">防御率</option>
+      <option value="W">勝利数</option>
+      <option value="L">敗戦数</option>
+      <option value="IP">投球回</option>
+      <option value="SO9">奪三振率</option>
+      <option value="WHIP">WHIP</option>
+      <option value="BB9">与四球率</option>
+      <option value="BAVG">被打率</option>
+      <option value="FIP">FIP</option>
+      <option value="HD">ホールド</option>
+      <option value="SV">セーブ</option>
+      <option value="pWAR">投手簡易WAR</option>
+    </optgroup>
+  </select>`;
+  
   document.getElementById('pennant-leaders').innerHTML = selectHtml;
   
   var orderSelHtml = '<select id="final-order-select" onchange="renderFinalOrder()">';
@@ -5272,6 +6720,13 @@ function renderPennantResults() {
 }
 
 function renderLeaders() {
+  if (!pennantResults) return;
+  
+// 🏆 共通のWAR算出システムを呼び出して事前に計算
+  if (window.calculateLeagueWAR) {
+    window.calculateLeagueWAR(pennantResults);
+  }
+
   let cat = document.getElementById('leader-category').value;
   let allBatters = [], allPitchers = [];
   let standingBg = ['','standing-1','standing-2','standing-3','standing-4','standing-5','standing-6'];
@@ -5285,106 +6740,19 @@ function renderLeaders() {
   let players = isPitcherCat ? allPitchers : allBatters;
   let isPitcher = isPitcherCat;
   
-// 新（前回ブロックの全置き換え）
-  // リーグ平均値の計算（WAR用）
-  let leagueAvgWoba = 0, leagueTotalPA = 0;
-  let totSingles = 0, tot2B = 0, tot3B = 0, totHR = 0, totHits = 0;
-  allBatters.forEach(b => {
-    let singles = Math.max(0, b.H - (b._2B||0) - (b._3B||0) - (b.HR||0));
-    let woba = (0.7*(b.BB||0) + 0.7*(b.HBP||0) + 0.9*singles + 1.25*(b._2B||0) + 1.6*(b._3B||0) + 2.0*(b.HR||0)) / Math.max(1, b.PA);
-    leagueAvgWoba += woba * b.PA;
-    leagueTotalPA += b.PA;
-    totSingles += singles; tot2B += (b._2B||0); tot3B += (b._3B||0); totHR += (b.HR||0);
-    totHits += singles + (b._2B||0) + (b._3B||0) + (b.HR||0);
-  });
-  leagueAvgWoba = leagueTotalPA > 0 ? leagueAvgWoba / leagueTotalPA : 0.300;
-
-  let leagueAvgFIP = 0, leagueTotalIP = 0;
-  allPitchers.forEach(p => {
-    let ip = p.outs / 3;
-    if (ip > 0) {
-      let fip = (3*(p.BB+p.HBP) - 2*p.SO) / ip + 3.0;
-      leagueAvgFIP += fip * ip;
-      leagueTotalIP += ip;
-    }
-  });
-  leagueAvgFIP = leagueTotalIP > 0 ? leagueAvgFIP / leagueTotalIP : 3.0;
-
-  // リーグの得点環境（wRC+・RPW算出用）
-  let totalLeagueRuns = pennantResults.reduce((s,t)=>s+t.runsScored,0);
-  let totalTeamGames = pennantResults.reduce((s,t)=>s+t.w+t.l+t.d,0);
-  let leagueRPerPA = leagueTotalPA > 0 ? totalLeagueRuns / leagueTotalPA : 0.115;
-  let avgRunsPerGameTotal = totalTeamGames > 0 ? (totalLeagueRuns / totalTeamGames) * 2 : 9;
-
-  // 守備の価値をゲームバランス（実際の安打内訳）から自動算出
-  let avgHitWobaWeight = totHits > 0 ? (totSingles*0.9 + tot2B*1.25 + tot3B*1.6 + totHR*2.0) / totHits : 0.9;
-  let fpRunValue = avgHitWobaWeight / WOBA_SCALE;
-  let errorRunValue = 0.9 / WOBA_SCALE;
-
-  // 得点環境から1勝に必要なランズ数(RPW)を動的算出
-  let RPW = 10 * Math.pow(Math.max(avgRunsPerGameTotal,1) / 9, 0.75);
-
-  // ===== リーグ全体の目標WAR量（総勝利数−代替水準チームの勝利数） =====
-  const REPLACEMENT_WIN_PCT = 0.294; // 代替水準チームの想定勝率
-  const BATTING_WAR_SHARE = 0.5;     // 打撃側・投手側のWAR配分（調整可）
-  let totalWins = pennantResults.reduce((s,t)=>s+t.w,0);
-  let avgGamesPerTeam = pennantResults.length > 0 ? totalTeamGames / pennantResults.length : 140;
-  let targetTotalWar = totalWins - pennantResults.length * avgGamesPerTeam * REPLACEMENT_WIN_PCT;
-  let battingTarget = targetTotalWar * BATTING_WAR_SHARE;
-  let pitchingTarget = targetTotalWar * (1 - BATTING_WAR_SHARE);
-
-  // ===== 投手の代替水準FIPを目標WAR量から直接逆算（パーセンタイル不要・常に安定） =====
-  let totalIpScale = 0;
-  allPitchers.forEach(p => { p._ip = p.outs / 3; p._ipScale = p._ip / 9; totalIpScale += p._ipScale; });
-  let replFIP = totalIpScale > 0 ? leagueAvgFIP + pitchingTarget * RPW / totalIpScale : leagueAvgFIP + 0.5;
-
-  allPitchers.forEach(p => {
-    let fip = p._ip > 0 ? (3*(p.BB+p.HBP) - 2*p.SO) / p._ip + 3.0 : leagueAvgFIP;
-    p._war = (replFIP - fip) * p._ipScale / RPW;
-  });
-
-  // ===== 野手の代替水準wOBAを目標WAR量から直接逆算 =====
-  let residualRunsTotal = 0;
-  allBatters.forEach(b => {
-    let runRuns = (b.SB||0)*0.2 - (b.CS||0)*0.4 + (b.BR||0)*0.15;
-    let defRuns = (b.FP||0)*fpRunValue - (b.E||0)*errorRunValue;
-    let posAdjFull = 0, pos = b.defPos || '';
-    if      (pos === '捕') posAdjFull = 12.5;
-    else if (pos === '遊') posAdjFull = 7.5;
-    else if (pos === '二' || pos === '中') posAdjFull = 2.5;
-    else if (pos === '三') posAdjFull = 2.5;
-    else if (pos === '右' || pos === '左') posAdjFull = -7.5;
-    else if (pos === '一') posAdjFull = -12.5;
-    else if (pos === '指') posAdjFull = -17.5;
-    b._posAdj = posAdjFull * (b.PA / 600);
-    b._runRuns = runRuns;
-    b._defRuns = defRuns;
-    residualRunsTotal += runRuns + defRuns + b._posAdj;
-  });
-  let replWoba = leagueTotalPA > 0
-    ? leagueAvgWoba - (battingTarget * RPW - residualRunsTotal) * WOBA_SCALE / leagueTotalPA
-    : leagueAvgWoba - 0.030;
-
-  allBatters.forEach(b => {
-    let singles = Math.max(0, b.H - (b._2B||0) - (b._3B||0) - (b.HR||0));
-    let woba = b.PA > 0 ? (0.7*(b.BB||0) + 0.7*(b.HBP||0) + 0.9*singles + 1.25*(b._2B||0) + 1.6*(b._3B||0) + 2.0*(b.HR||0)) / b.PA : 0;
-    let batRuns = (woba - replWoba) / WOBA_SCALE * b.PA;
-    b._war = (batRuns + b._runRuns + b._defRuns + b._posAdj) / RPW;
-  });
-  
-  let headerLabels = isPitcher ? ['速','威','変','制','体'] : ['ミ','パ','走','肩','守'];
-  let headerPos = isPitcher ? '役割' : '打/守';
+  if (cat === 'CS_RATE') {
+    players = allBatters.filter(b => b.defPos === '捕');
+  }
   
   let html = `<div style="width:100%;"><table class="result-table" style="font-size:7px;"><thead><tr>
     <th style="width:16px;">順</th><th style="width:20%;">選手/チーム</th><th style="width:22px;">成績</th>
-    <th style="color:#ffa; width:8%;">総合</th><th style="width:6%;">${headerPos}</th>
-    ${headerLabels.map(l=>`<th style="width:6%;">${l}</th>`).join("")}
+    <th style="color:#ffa; width:8%;">総合</th><th style="width:6%;">${isPitcher ? '役割' : '打/守'}</th>
+    ${(isPitcher ? ['速','威','変','制','体'] : ['ミ','パ','走','肩','守']).map(l=>`<th style="width:6%;">${l}</th>`).join("")}
     <th style="width:auto;">特能</th>
   </tr></thead><tbody>`;
   
   let sortedPlayers = players.slice().sort((a,b) => {
-    if (cat === 'bWAR') return b._war - a._war;
-    if (cat === 'pWAR') return b._war - a._war;
+    if (cat === 'bWAR' || cat === 'pWAR') return b._war - a._war;
     if (cat === 'ERA') return ((a.ER*27/(a.outs||1)) - (b.ER*27/(b.outs||1)));
     if (cat === 'AVG') return ((b.H/(b.AB||1)) - (a.H/(a.AB||1)));
     if (cat === 'RISP') return ((b.RISP_H/(b.RISP_AB||1)) - (a.RISP_H/(a.RISP_AB||1)));
@@ -5394,26 +6762,22 @@ function renderLeaders() {
       let bO = (b.PA>0?(b.H+b.BB+b.HBP)/b.PA:0)+(b.AB>0?b.TB/b.AB:0);
       return bO - aO;
     }
-    if (cat === 'WRCPLUS') return calcWrcPlus(calcWoba(b), leagueAvgWoba, leagueRPerPA) - calcWrcPlus(calcWoba(a), leagueAvgWoba, leagueRPerPA);
-    if (cat === 'BB') return (b.BB||0) - (a.BB||0);
-    if (cat === 'PA') return (b.PA||0) - (a.PA||0);
-    if (cat === 'OBP') return ((b.H+b.BB+b.HBP)/(b.PA||1)) - ((a.H+a.BB+a.HBP)/(a.PA||1));
-    if (cat === 'SLG') return ((b.TB/(b.AB||1)) - (a.TB/(a.AB||1)));
-    if (cat === 'IP') return (b.outs - a.outs);
-    if (cat === 'SO9') return ((b.SO*27/(b.outs||1)) - (a.SO*27/(a.outs||1)));
-    if (cat === 'WHIP') return (((a.BB+a.H)*3/(a.outs||1)) - ((b.BB+b.H)*3/(b.outs||1)));
-    if (cat === 'BB9') return (((a.BB+a.HBP)*27/(a.outs||1)) - ((b.BB+b.HBP)*27/(b.outs||1)));
-    if (cat === 'BAVG') return ((a.H/(a.AB||1)) - (b.H/(b.AB||1)));
-    if (cat === 'FIP') {
-      let aIP = a.outs/3, bIP = b.outs/3;
-      let aF = aIP>0?(3*(a.BB+a.HBP)-2*a.SO)/aIP+3.0:99;
-      let bF = bIP>0?(3*(b.BB+b.HBP)-2*b.SO)/bIP+3.0:99;
-      return aF - bF;
+    if (cat === 'WRCPLUS') {
+      let lWoba = window.leagueAvgWoba || 0.300;
+      let lRpa = window.leagueRPerPA || 0.115;
+      return calcWrcPlus(calcWoba(b), lWoba, lRpa) - calcWrcPlus(calcWoba(a), lWoba, lRpa);
+    }
+    if (cat === 'CS_RATE') {
+      let allowedA = a.SB_Allowed || 0, caughtA = a.CS_Caught || 0;
+      let rateA = (allowedA + caughtA) > 0 ? caughtA / (allowedA + caughtA) : 0;
+      let allowedB = b.SB_Allowed || 0, caughtB = b.CS_Caught || 0;
+      let rateB = (allowedB + caughtB) > 0 ? caughtB / (allowedB + caughtB) : 0;
+      if (Math.abs(rateA - rateB) > 0.0001) return rateB - rateA;
+      return (allowedB + caughtB) - (allowedA + caughtA);
     }
     return (b[cat]||0) - (a[cat]||0);
   });
 
-  // WARの表示用に値の配列を作成（カラースケール用）
   let displayVals = sortedPlayers.map(p => {
     if (cat === 'bWAR' || cat === 'pWAR') return p._war;
     if (cat === 'ERA') return (p.ER*27/(p.outs||1));
@@ -5421,12 +6785,11 @@ function renderLeaders() {
     if (cat === 'RISP') return (p.RISP_H/(p.RISP_AB||1));
     if (cat === 'RISP_BAVG') return (p.RISP_H/(p.RISP_AB||1));
     if (cat === 'OPS') { let o = (p.H+p.BB+p.HBP)/(p.PA||1) + p.TB/(p.AB||1); return o; }
-    if (cat === 'WRCPLUS') return calcWrcPlus(calcWoba(p), leagueAvgWoba, leagueRPerPA);
-    if (cat === 'BB') return (p.BB||0);
-    if (cat === 'PA') return (p.PA||0);
-    if (cat === 'OBP') return ((p.H+p.BB+p.HBP)/(p.PA||1));
-    if (cat === 'SLG') return (p.TB/(p.AB||1));
-    if (cat === 'FIP') { let ip = p.outs/3; return ip>0?(3*(p.BB+p.HBP)-2*p.SO)/ip+3.0:99; }
+    if (cat === 'WRCPLUS') return calcWrcPlus(calcWoba(p), window.leagueAvgWoba || 0.300, window.leagueRPerPA || 0.115);
+    if (cat === 'CS_RATE') {
+      let allowed = p.SB_Allowed || 0, caught = p.CS_Caught || 0;
+      return (allowed + caught) > 0 ? caught / (allowed + caught) : 0;
+    }
     return p[cat] || 0;
   }).filter(v => !isNaN(v) && isFinite(v) && v !== undefined && v !== null);
   let minVal = displayVals.length > 0 ? Math.min(...displayVals) : 0;
@@ -5440,17 +6803,19 @@ function renderLeaders() {
     else if (cat === 'RISP') val = (p.RISP_H/(p.RISP_AB||1)).toFixed(3).replace(/^0/,'') || '.000';
     else if (cat === 'RISP_BAVG') val = (p.RISP_H/(p.RISP_AB||1)).toFixed(3).replace(/^0/,'') || '.000';
     else if (cat === 'OPS') { let obp = (p.H+p.BB+p.HBP)/(p.PA||1), slg = p.TB/(p.AB||1); val = (obp+slg).toFixed(3); }
-    else if (cat === 'WRCPLUS') val = calcWrcPlus(calcWoba(p), leagueAvgWoba, leagueRPerPA);
-    else if (cat === 'BB') val = (p.BB||0);
-    else if (cat === 'PA') val = (p.PA||0);
-    else if (cat === 'OBP') val = ((p.H+p.BB+p.HBP)/(p.PA||1)).toFixed(3).replace(/^0/,'') || '.000';
-    else if (cat === 'SLG') val = (p.TB/(p.AB||1)).toFixed(3);
+    else if (cat === 'WRCPLUS') val = calcWrcPlus(calcWoba(p), window.leagueAvgWoba || 0.300, window.leagueRPerPA || 0.115);
     else if (cat === 'IP') val = `${Math.floor(p.outs/3)}.${p.outs%3}`;
     else if (cat === 'SO9') val = (p.SO*27/(p.outs||1)).toFixed(2);
     else if (cat === 'WHIP') val = ((p.BB+p.H)*3/(p.outs||1)).toFixed(2);
     else if (cat === 'BB9') val = ((p.BB+p.HBP)*27/(p.outs||1)).toFixed(2);
     else if (cat === 'FIP') { let ip = p.outs/3; val = ip>0 ? ((3*(p.BB+p.HBP)-2*p.SO)/ip+3.0).toFixed(2) : '-'; }
+    else if (cat === 'CS_RATE') {
+      let allowed = p.SB_Allowed || 0, caught = p.CS_Caught || 0;
+      val = (allowed + caught) > 0 ? (caught / (allowed + caught)).toFixed(3).replace(/^0/,'') : '.000';
+    }
     else val = p[cat] || 0;
+
+    val = String(val);
 
     let s = p.s || (isPitcher ? [145,50,50,50,50] : [50,50,50,50,50]);
     let cs = isPitcher ? [cvSpeed(s[0]), s[1]||0, s[2]||0, s[3]||0, s[4]||0] : s;
@@ -5475,19 +6840,28 @@ function renderLeaders() {
   document.getElementById('leader-category').value = cat;
 }
 
+/* ==========================================================================
+   ▼ 【修正】最終個人オーダー詳細テーブル（成績と能力の黒太線境界追加）
+   ========================================================================== */
 function renderFinalOrder() {
   let idx = document.getElementById('final-order-select').value;
   let team = pennantResults[idx];
   if (!team) return;
 
+  // 🏆 選択されたチーム全体のペナント累積成績サマリーを表示
+  const summaryEl = document.getElementById('pennant-team-stats-summary');
+  if (summaryEl && window.generateTeamSummaryHtml) {
+    summaryEl.innerHTML = window.generateTeamSummaryHtml(team);
+  }
+
+  // 📋 野手オーダー (二・三塁打を削除し、好守の右隣に「失(失策)」列を追加した新テーブル)
   let fHtml = `<div class="order-sec-label">■ 野手オーダー</div><table class="result-table match-mini-table">${MATCH_COLGROUP_BATTER}
     <thead><tr>
       <th style="color:#ffa;">総合</th><th>打/守</th><th>名前</th>
-      <th>ミ</th><th>パ</th><th>走</th><th>肩</th><th>守</th>
+      <th>ミ</th><th>パ</th><th>走</th><th>肩</th><th style="border-right: 2px solid #000000 !important;">守</th> <!-- 🏆 境界線を太く -->
       <th style="border-left:1px solid #aaa;" class="c-rate">率</th>
       <th class="c-hr">本</th><th class="c-rbi">点</th>
-      <th class="c-sb">盗</th><th class="c-def">守</th><th class="c-sb">走</th>
-      <th class="c-2b">二</th><th class="c-3b">三</th>
+      <th class="c-sb">盗</th><th class="c-def">守</th><th class="c-def">失</th><th class="c-sb">走</th>
       <th class="c-rbi">得</th>
       <th style="border-left:1px solid #aaa;" class="c-rate">出</th>
       <th style="border-left:1px solid #aaa;" class="c-ops">OPS</th>
@@ -5501,45 +6875,68 @@ function renderFinalOrder() {
     let OBP = b.PA > 0 ? (b.H + b.BB + b.HBP) / b.PA : 0;
     let SLG = b.AB > 0 ? b.TB / b.AB : 0;
     let OPS = b.PA > 0 ? (OBP + SLG).toFixed(3) : '-';
-    let WRC = b.PA > 0 ? calcWrcPlus(calcWoba(b), LEAGUE_AVG_WOBA_REF, LEAGUE_R_PER_PA_REF) : '-';
-    let avgStr = b.AB > 0 ? AVG.toFixed(3).replace(/^0/,'') || '.000' : '-';
-    let obpStr = b.PA > 0 ? OBP.toFixed(3).replace(/^0/,'') || '.000' : '-';
-    let sbStr = `${b.SB||0}<span style="font-size:5px;">(${b.CS||0})</span>`;
+    let WRC = b.PA > 0 ? calcWrcPlus(calcWoba(b), window.leagueAvgWoba || 0.300, window.leagueRPerPA || 0.115) : '-';
     
-    // ── [修正] ペナント画面側でも同様に動的縮小を適用 ──
+    // ハイライト適用の算出
+    let avgStr = b.AB > 0 ? AVG.toFixed(3).replace(/^0/,'') || '.000' : '-';
+    if (window.checkAndHighlight) avgStr = window.checkAndHighlight(b, 'AVG', AVG, avgStr);
+    
+    let obpStr = b.PA > 0 ? OBP.toFixed(3).replace(/^0/,'') || '.000' : '-';
+    if (window.checkAndHighlight) obpStr = window.checkAndHighlight(b, 'OBP', OBP, obpStr);
+    
+    let hrVal = b.HR || 0;
+    if (window.checkAndHighlight) hrVal = window.checkAndHighlight(b, 'HR', b.HR || 0, String(hrVal));
+    
+    let rbiVal = b.RBI || 0;
+    if (window.checkAndHighlight) rbiVal = window.checkAndHighlight(b, 'RBI', b.RBI || 0, String(rbiVal));
+    
+    let hVal = b.H || 0;
+    if (window.checkAndHighlight) hVal = window.checkAndHighlight(b, 'H', b.H || 0, String(hVal));
+    
+    let sbVal = b.SB || 0;
+    if (window.checkAndHighlight) sbVal = window.checkAndHighlight(b, 'SB', b.SB || 0, String(sbVal));
+    let sbStr = `${sbVal}<span style="font-size:5px;">(${b.CS||0})</span>`;
+
+    // 捕手は .385 形式の阻止率表示へ変更、野手はFP値
     let caught = b.CS_Caught || 0;
     let allowed = b.SB_Allowed || 0;
     let sbText = `${caught}-${allowed}`;
     let fs = "5.5px";
     if (sbText.length >= 6) { fs = "4px"; }
     else if (sbText.length >= 5) { fs = "4.5px"; }
-    let fpStr = (b.defPos==="捕") ? `<span class="catcher-sb-stat" style="font-size:${fs};">${sbText}</span>` : (b.FP||0);
+    let fpStr = (b.defPos === "捕") ? `<span class="catcher-sb-stat" style="font-size:${fs};">${(caught + allowed) > 0 ? (caught / (caught + allowed)).toFixed(3).replace(/^0/,'') : '.000'}</span>` : (b.FP || 0);
+    
     fHtml += `<tr>
       <td class="result-total" rowspan="2">${rankFmt(ar,ac)}${valFmt(avg)}</td>
       <td class="result-pos-cell ${pc}" style="white-space:nowrap;font-size:6.5px;">${b.batOrder} ${b.defPos}</td>
       <td class="res-name-cell ${pc}"><span class="res-name-text under-${b.bat||'R'}">${b.displayName || b.name}</span></td>
-      ${b.s.map(v=>{let[vr,vc]=getRank(v);return`<td class="order-stat">${rankFmt(vr,vc)}${valFmt(v)}</td>`;}).join("")}
+      ${b.s.map((v, sIdx)=>{
+        let[vr,vc]=getRank(v);
+        // 🏆 守(sIdx===4)の右辺を太い黒境界線にするスタイルを適用
+        let borderStyle = sIdx === 4 ? ' style="border-right: 2px solid #000000 !important;"' : '';
+        return `<td class="order-stat"${borderStyle}>${rankFmt(vr,vc)}${valFmt(v)}</td>`;
+      }).join("")}
       <td style="border-left:1px solid #aaa;" class="c-rate">${avgStr}</td>
-      <td class="c-hr">${b.HR||0}</td>
-      <td class="c-rbi">${b.RBI||0}</td>
+      <td class="c-hr">${hrVal}</td>
+      <td class="c-rbi">${rbiVal}</td>
       <td class="c-sb">${sbStr}</td>
-      <td class="c-def">${fpStr}</td>
+      <td class="c-fp">${fpStr}</td>
+      <td class="c-def">${b.E||0}</td> <!-- 失策 -->
       <td class="c-sb">${b.BR||0}</td>
-      <td class="c-2b">${b._2B||0}</td>
-      <td class="c-3b">${b._3B||0}</td>
       <td class="c-rbi">${b.R||0}</td>
       <td style="border-left:1px solid #aaa;" class="c-rate">${obpStr}</td>
       <td style="border-left:1px solid #aaa;" class="c-ops" rowspan="2">${OPS}</td>
       <td class="c-war" rowspan="2">${WRC}</td>
     </tr>
-    <tr><td colspan="19" class="result-abi" style="text-align:right;">${abiHtml(b.abi)}</td></tr>`;
+    <tr><td colspan="17" class="result-abi" style="text-align:right;">${abiHtml(b.abi)}</td></tr>`;
   });
   fHtml += `</tbody></table>`;
 
+  // 📋 投手オーダー
   let pHtml = `<div class="order-sec-label" style="margin-top:8px;">■ 投手オーダー</div><table class="result-table match-mini-table">${MATCH_COLGROUP_PITCHER}
     <thead><tr>
       <th style="color:#ffa;">総合</th><th>役割</th><th>名前</th>
-      <th>速</th><th>威</th><th>変</th><th>制</th><th>体</th>
+      <th>速</th><th>威</th><th>変</th><th>制</th><th style="border-right: 2px solid #000000 !important;">体</th> <!-- 🏆 境界線を太く -->
       <th class="c-rate">防</th><th class="c-rbi">回</th><th class="c-hr">振</th>
       <th class="c-def">被打</th><th class="c-sb">与四</th><th class="c-def">WHIP</th>
       <th class="c-hr">勝敗</th>
@@ -5550,10 +6947,19 @@ function renderFinalOrder() {
   team.pitchers.forEach(p => {
     if (!p || !p.s) return;
     let cs=[cvSpeed(p.s[0]),p.s[1]||0,p.s[2]||0,p.s[3]||0,p.s[4]||0], avg = Math.round(cs.reduce((a,b)=>a+b)/5), [ar,ac]=getRank(avg);
+    
+    // ハイライト適用の算出
     let ERA = p.outs > 0 ? (p.ER * 27) / p.outs : 0, eraStr = p.outs === 0 ? "-" : ERA.toFixed(2);
+    if (p.outs > 0 && window.checkAndHighlight) eraStr = window.checkAndHighlight(p, 'ERA', ERA, eraStr);
+    
     let fInn = Math.floor(p.outs / 3), rOut = p.outs % 3;
     let innStr = fInn + (rOut>0?`<span style="font-size:5px;"> ${rOut}/3</span>`:"");
-    let K = p.SO || 0, BAVG = p.AB > 0 ? (p.H / p.AB).toFixed(3).replace(/^0/,'') || '.000' : '-';
+    
+    let K = p.SO || 0;
+    let kStr = String(K);
+    kStr = checkAndHighlight(p, 'SO', K, kStr);
+    
+    let BAVG = p.AB > 0 ? (p.H / p.AB).toFixed(3).replace(/^0/,'') || '.000' : '-';
     let BB9 = p.outs > 0 ? ((p.BB + p.HBP) * 27 / p.outs).toFixed(2) : '-';
     let WHIP = p.outs > 0 ? ((p.BB + p.H) * 3 / p.outs).toFixed(2) : '-';
     let pOBP = p.PA > 0 ? (p.H + p.BB + p.HBP) / p.PA : 0, pSLG = p.AB > 0 ? p.TB / p.AB : 0;
@@ -5561,20 +6967,37 @@ function renderFinalOrder() {
     let IP_for_fip = p.outs / 3;
     let FIP = IP_for_fip > 0 ? ((3*(p.BB+p.HBP) - 2*K) / IP_for_fip + 3.0).toFixed(2) : '-';
     
+    let wVal = p.W || 0;
+    if (window.checkAndHighlight) wVal = window.checkAndHighlight(p, 'W', p.W || 0, String(wVal));
+    let lVal = String(p.L || 0); // 敗数はハイライト対象外
+    let wlStr = `${wVal}-${lVal}`;
+    
+    let hdVal = p.HD || 0;
+    if (window.checkAndHighlight) hdVal = window.checkAndHighlight(p, 'HD', p.HD || 0, String(hdVal));
+    
+    let svVal = p.SV || 0;
+    if (window.checkAndHighlight) svVal = window.checkAndHighlight(p, 'SV', p.SV || 0, String(svVal));
+    
     pHtml += `<tr>
       <td class="result-total" rowspan="2">${rankFmt(ar,ac)}${valFmt(avg)}</td>
       <td class="result-pos-cell pitcher">${p.role||'?'}</td>
       <td class="res-name-cell pitcher"><span class="res-name-text under-${p.bat||'R'}">${p.displayName || p.name}</span></td>
-      ${p.s.map((v,j)=>{let sc=j===0?cvSpeed(v):v;let[vr,vc]=getRank(sc);return`<td class="order-stat">${rankFmt(vr,vc)}${valFmt(v)}</td>`;}).join("")}
+      ${p.s.map((v,j)=>{
+        let sc=j===0?cvSpeed(v):v;
+        let[vr,vc]=getRank(sc);
+        // 🏆 体(j===4)の右辺を太い黒境界線にするスタイルを適用
+        let borderStyle = j === 4 ? ' style="border-right: 2px solid #000000 !important;"' : '';
+        return`<td class="order-stat"${borderStyle}>${rankFmt(vr,vc)}${valFmt(v)}</td>`;
+      }).join("")}
       <td class="c-rate">${eraStr}</td>
       <td class="c-rbi">${innStr||'-'}</td>
-      <td class="c-hr">${K}</td>
+      <td class="c-hr">${kStr}</td>
       <td class="c-def">${BAVG}</td>
       <td class="c-sb">${BB9}</td>
       <td class="c-def">${WHIP}</td>
-      <td class="c-hr">${p.W||0}-${p.L||0}</td>
-      <td class="c-2b">${p.HD||0}</td>
-      <td class="c-3b">${p.SV||0}</td>
+      <td class="c-hr">${wlStr}</td>
+      <td class="c-2b">${hdVal}</td>
+      <td class="c-3b">${svVal}</td>
       <td class="c-ops">${FIP}</td>
     </tr>
     <tr><td colspan="17" class="result-abi" style="text-align:right;">${abiHtml(p.abi)}</td></tr>`;
@@ -5728,7 +7151,7 @@ function genReinforcePlayer(posType, type) {
   
   return {
     id: Math.random().toString(36).substr(2, 9),
-    name: randName(), posType, draftRound: null,
+    name: getPlayerNameByContext(type), posType, draftRound: null,
     isGenius, awk, gBonus, ab,
     aS, pS, pAvg, aAvg,
     abi: abiObj, visAbi,
@@ -5897,10 +7320,673 @@ function renderReinforce() {
   }
 }
 
+window.checkAndHighlight = checkAndHighlight;
+window.calculateLeagueTitleLimits = calculateLeagueTitleLimits;
+window.renderAwards = renderAwards;
+
+/* ==========================================================================
+   ▼ 【完全版】ペナント個人表彰・タイトル選出＆ハイライト・チームサマリーロジック一式
+   ========================================================================== */
+
+// 1. 🏆 チーム全体の累積成績（サマリーカード）のHTMLを縦4列コンパクト設計で算出・生成する関数
+function generateTeamSummaryHtml(team) {
+  if (!team) return '';
+  let w = team.w || 0, l = team.l || 0, d = team.d || 0;
+  let wpct = (w + l) > 0 ? (w / (w + l)).toFixed(3) : '.000';
+
+  // 野手スタッツ合算
+  let tPA = 0, tAB = 0, tH = 0, tBB = 0, tHBP = 0, tTB = 0, tHR = 0, tSO = 0, tSB = 0, tBR = 0, tFP = 0, tE_fielder = 0, tWarF = 0;
+  team.batters.forEach(b => {
+    tPA += b.PA || 0; tAB += b.AB || 0; tH += b.H || 0;
+    tBB += b.BB || 0; tHBP += b.HBP || 0; tTB += b.TB || 0;
+    tHR += b.HR || 0; tSO += b.SO || 0; tSB += b.SB || 0;
+    tBR += b.BR || 0; tFP += b.FP || 0; tE_fielder += b.E || 0;
+    tWarF += b._war || 0;
+  });
+
+  let avg = tAB > 0 ? (tH / tAB).toFixed(3) : '.000';
+  let obp = tPA > 0 ? ((tH + tBB + tHBP) / tPA).toFixed(3) : '.000';
+  let slg = tAB > 0 ? (tTB / tAB).toFixed(3) : '.000';
+  let ops = (parseFloat(obp) + parseFloat(slg)).toFixed(3);
+
+  // 投手スタッツ合計
+  let tOuts = 0, tER = 0, tP_PA = 0, tP_AB = 0, tP_H = 0, tP_TB = 0, tP_BB = 0, tP_HBP = 0, tP_SO = 0, tP_R = 0, tP_HR_Allowed = 0, tWarP = 0;
+  team.pitchers.forEach(p => {
+    tOuts += p.outs || 0; tER += p.ER || 0; tP_PA += p.PA || 0;
+    tP_AB += p.AB || 0; tP_H += p.H || 0; tP_TB += p.TB || 0;
+    tP_BB += p.BB || 0; tP_HBP += p.HBP || 0; tP_SO += p.SO || 0;
+    tP_R += p.R || 0; tP_HR_Allowed += p.HR_Allowed || 0;
+    tWarP += p._war || 0;
+  });
+
+  let ip = tOuts / 3;
+  let teamEra = tOuts > 0 ? ((tER * 27) / tOuts).toFixed(2) : '0.00'; // 🏆 チーム防御率
+  let p_obp = tP_PA > 0 ? ((tP_H + tP_BB + tP_HBP) / tP_PA) : 0;
+  let p_slg = tP_AB > 0 ? (tP_TB / tP_AB) : 0;
+  let p_ops = (p_obp + p_slg).toFixed(3);
+  let p_avg = tP_AB > 0 ? (tP_H / tP_AB).toFixed(3) : '.000';
+  let whip = ip > 0 ? ((tP_BB + tP_H) / ip).toFixed(2) : '0.00';
+  let so9 = ip > 0 ? (tP_SO * 9 / ip).toFixed(2) : '0.00';
+
+  let totalWar = (tWarF + tWarP).toFixed(2);
+  let totalErrors = tE_fielder;
+
+  let lWoba = window.leagueAvgWoba || 0.300;
+  let lRpa = window.leagueRPerPA || 0.115;
+  let tWoba = tPA > 0 ? (0.7*(tBB + tHBP) + 0.9*(tH - tHR) + 2.0*tHR) / tPA : 0.300;
+  let teamWrcPlus = calcWrcPlus(tWoba, lWoba, lRpa);
+
+  // 縦4列に美しく並べ替えたチーム全体のスタッツサマリーカード
+  return `
+  <div style="background:#f9f9fc; border:1px solid #ddd; border-radius:5px; padding:6px; font-size:7.2px; line-height:1.4; color:#333; margin-bottom:8px;">
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+      <!-- 列1: チーム勝敗 -->
+      <div style="border-right: 1px solid #eee; padding-right:4px;">
+        <div style="font-weight:bold; color:#1a73e8; border-bottom:1px solid #eee; margin-bottom:2px;">📊 チーム勝敗</div>
+        <div>勝数: <b>${w}</b></div>
+        <div>敗数: <b>${l}</b></div>
+        <div>分数: <b>${d}</b></div>
+        <div>勝率: <b>${wpct}</b></div>
+        <div>WAR: <b>${totalWar}</b></div>
+      </div>
+      <!-- 列2: 攻撃スタッツ -->
+      <div style="border-right: 1px solid #eee; padding-right:4px; padding-left:2px;">
+        <div style="font-weight:bold; color:#2e7d32; border-bottom:1px solid #eee; margin-bottom:2px;">⚾ 攻撃スタッツ</div>
+        <div>得点: <b>${team.runsScored}</b></div>
+        <div>wRC+: <b>${teamWrcPlus}</b></div>
+        <div>打率: <b>${avg}</b></div>
+        <div>出塁: <b>${obp}</b></div>
+        <div>本塁: <b>${tHR}</b></div>
+      </div>
+      <!-- 列3: 投手スタッツ -->
+      <div style="border-right: 1px solid #eee; padding-right:4px; padding-left:2px;">
+        <div style="font-weight:bold; color:#c62828; border-bottom:1px solid #eee; margin-bottom:2px;">🔥 投手スタッツ</div>
+        <div>失点: <b>${team.runsAllowed}</b></div>
+        <div>防御率: <b>${teamEra}</b></div>
+        <div>被OP: <b>${p_ops}</b></div>
+        <div>被打: <b>${p_avg}</b></div>
+        <div>WHIP: <b>${whip}</b></div>
+        <div>奪三振率: <b>${so9}</b></div>
+        <div>被本: <b>${tP_HR_Allowed}</b></div>
+      </div>
+      <!-- 列4: 走守スタッツ -->
+      <div style="padding-left:2px;">
+        <div style="font-weight:bold; color:#ab47bc; border-bottom:1px solid #eee; margin-bottom:2px;">🏃 走守スタッツ</div>
+        <div>盗塁: <b>${tSB}</b></div>
+        <div>好走: <b>${tBR}</b></div>
+        <div>好守: <b>${tFP}</b></div>
+        <div>失策: <b>${totalErrors}</b></div>
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+// 2. 🏆 【ピュア関数】リーグ全体のWARを事前に一括計算する共通システム関数 (Cloud Functions対応設計)
+function calculateLeagueWAR(results) {
+  if (!results) return;
+  let allBatters = [], allPitchers = [];
+  results.forEach(t => {
+    t.batters.forEach(b => { b.teamName = t.name; b._war = 0; allBatters.push(b); });
+    t.pitchers.forEach(p => { p.teamName = t.name; p._war = 0; allPitchers.push(p); });
+  });
+
+  let leagueAvgWoba = 0, leagueTotalPA = 0;
+  let totSingles = 0, tot2B = 0, tot3B = 0, totHR = 0, totHits = 0;
+  allBatters.forEach(b => {
+    let singles = Math.max(0, b.H - (b._2B||0) - (b._3B||0) - (b.HR||0));
+    let woba = b.PA > 0 ? (0.7*(b.BB||0) + 0.7*(b.HBP||0) + 0.9*singles + 1.25*(b._2B||0) + 1.6*(b._3B||0) + 2.0*(b.HR||0)) / b.PA : 0;
+    leagueAvgWoba += woba * b.PA;
+    leagueTotalPA += b.PA;
+    totSingles += singles; tot2B += (b._2B||0); tot3B += (b._3B||0); totHR += (b.HR||0);
+    totHits += singles + (b._2B||0) + (b._3B||0) + (b.HR||0);
+  });
+  leagueAvgWoba = leagueTotalPA > 0 ? leagueAvgWoba / leagueTotalPA : 0.300;
+
+  let leagueAvgFIP = 0, leagueTotalIP = 0;
+  allPitchers.forEach(p => {
+    let ip = p.outs / 3;
+    if (ip > 0) {
+      let fip = (3*(p.BB+p.HBP) - 2*p.SO) / ip + 3.0;
+      leagueAvgFIP += fip * ip;
+      leagueTotalIP += ip;
+    }
+  });
+  leagueAvgFIP = leagueTotalIP > 0 ? leagueAvgFIP / leagueTotalIP : 3.0;
+
+  let totalLeagueRuns = results.reduce((s,t)=>s+t.runsScored,0);
+  let totalTeamGames = results.reduce((s,t)=>s+t.w+t.l+t.d,0);
+  let leagueRPerPA = leagueTotalPA > 0 ? totalLeagueRuns / leagueTotalPA : 0.115;
+  let avgRunsPerGameTotal = totalTeamGames > 0 ? (totalLeagueRuns / totalTeamGames) * 2 : 9;
+
+  let avgHitWobaWeight = totHits > 0 ? (totSingles*0.9 + tot2B*1.25 + tot3B*1.6 + totHR*2.0) / totHits : 0.9;
+  let fpRunValue = avgHitWobaWeight / WOBA_SCALE;
+  let errorRunValue = 0.9 / WOBA_SCALE;
+
+  let RPW = 10 * Math.pow(Math.max(avgRunsPerGameTotal,1) / 9, 0.75);
+
+  const REPLACEMENT_WIN_PCT = 0.294;
+  const BATTING_WAR_SHARE = 0.5;
+  let totalWins = results.reduce((s,t)=>s+t.w,0);
+  let avgGamesPerTeam = results.length > 0 ? totalTeamGames / results.length : 140;
+  let targetTotalWar = totalWins - results.length * avgGamesPerTeam * REPLACEMENT_WIN_PCT;
+  let battingTarget = targetTotalWar * BATTING_WAR_SHARE;
+  let pitchingTarget = targetTotalWar * (1 - BATTING_WAR_SHARE);
+
+  let totalIpScale = 0;
+  allPitchers.forEach(p => { p._ip = p.outs / 3; p._ipScale = p._ip / 9; totalIpScale += p._ipScale; });
+  let replFIP = totalIpScale > 0 ? leagueAvgFIP + pitchingTarget * RPW / totalIpScale : leagueAvgFIP + 0.5;
+
+  allPitchers.forEach(p => {
+    let fip = p._ip > 0 ? (3*(p.BB+p.HBP) - 2*p.SO) / p._ip + 3.0 : leagueAvgFIP;
+    p._war = (replFIP - fip) * p._ipScale / RPW;
+  });
+
+  let residualRunsTotal = 0;
+  allBatters.forEach(b => {
+    let runRuns = (b.SB||0)*0.2 - (b.CS||0)*0.4 + (b.BR||0)*0.15;
+    let defRuns = (b.FP||0)*fpRunValue - (b.E||0)*errorRunValue;
+    let posAdjFull = 0, pos = b.defPos || '';
+    if      (pos === '捕') posAdjFull = 12.5;
+    else if (pos === '遊') posAdjFull = 7.5;
+    else if (pos === '二' || pos === '中') posAdjFull = 2.5;
+    else if (pos === '三') posAdjFull = 2.5;
+    else if (pos === '右' || pos === '左') posAdjFull = -7.5;
+    else if (pos === '一') posAdjFull = -12.5;
+    else if (pos === '指') posAdjFull = -17.5;
+    b._posAdj = posAdjFull * (b.PA / 600);
+    b._runRuns = runRuns;
+    b._defRuns = defRuns;
+    residualRunsTotal += runRuns + defRuns + b._posAdj;
+  });
+  let replWoba = leagueTotalPA > 0
+    ? leagueAvgWoba - (battingTarget * RPW - residualRunsTotal) * WOBA_SCALE / leagueTotalPA
+    : leagueAvgWoba - 0.030;
+
+  allBatters.forEach(b => {
+    let singles = Math.max(0, b.H - (b._2B||0) - (b._3B||0) - (b.HR||0));
+    let woba = b.PA > 0 ? (0.7*(b.BB||0) + 0.7*(b.HBP||0) + 0.9*singles + 1.25*(b._2B||0) + 1.6*(b._3B||0) + 2.0*(b.HR||0)) / b.PA : 0;
+    let batRuns = (woba - replWoba) / WOBA_SCALE * b.PA;
+    b._war = (batRuns + b._runRuns + b._defRuns + b._posAdj) / RPW;
+  });
+  
+  // 他のwRC+計算などのためグローバル空間（window）へ安全に保持
+  window.leagueAvgWoba = leagueAvgWoba;
+  window.leagueRPerPA = leagueRPerPA;
+}
+
+// 3. 🏆 【ピュア関数】リーグの個人タイトル獲得最高値を走査する計算関数
+function calculateLeagueTitleLimits(results) {
+  if (!results) return;
+  
+  // タイトル最高記録算出の前に、必ずWARデータを最新一括計算
+  calculateLeagueWAR(results);
+
+  let allBatters = [], allPitchers = [];
+  results.forEach(t => {
+    t.batters.forEach(b => { b.teamName = t.name; allBatters.push(b); });
+    t.pitchers.forEach(p => { p.teamName = t.name; allPitchers.push(p); });
+  });
+
+  leagueTitleHolders = {
+    AVG: { val: -1, players: [] },
+    HR: { val: -1, players: [] },
+    RBI: { val: -1, players: [] },
+    H: { val: -1, players: [] },
+    SB: { val: -1, players: [] },
+    OBP: { val: -1, players: [] },
+    ERA: { val: 9999, players: [] },
+    W: { val: -1, players: [] },
+    WPCT: { val: -1, players: [] },
+    SO: { val: -1, players: [] },
+    HD: { val: -1, players: [] },
+    SV: { val: -1, players: [] }
+  };
+
+  allBatters.forEach(b => {
+    let ab = b.AB || 0, pa = b.PA || 0;
+    let avg = ab > 0 ? b.H / ab : 0;
+    let obp = pa > 0 ? (b.H + b.BB + b.HBP) / pa : 0;
+
+    if (avg > leagueTitleHolders.AVG.val) { leagueTitleHolders.AVG.val = avg; leagueTitleHolders.AVG.players = [b]; }
+    else if (Math.abs(avg - leagueTitleHolders.AVG.val) < 0.0001 && avg > 0) { leagueTitleHolders.AVG.players.push(b); }
+
+    if ((b.HR||0) > leagueTitleHolders.HR.val) { leagueTitleHolders.HR.val = b.HR||0; leagueTitleHolders.HR.players = [b]; }
+    else if ((b.HR||0) === leagueTitleHolders.HR.val && (b.HR||0) > 0) { leagueTitleHolders.HR.players.push(b); }
+
+    if ((b.RBI||0) > leagueTitleHolders.RBI.val) { leagueTitleHolders.RBI.val = b.RBI||0; leagueTitleHolders.RBI.players = [b]; }
+    else if ((b.RBI||0) === leagueTitleHolders.RBI.val && (b.RBI||0) > 0) { leagueTitleHolders.RBI.players.push(b); }
+
+    if ((b.H||0) > leagueTitleHolders.H.val) { leagueTitleHolders.H.val = b.H||0; leagueTitleHolders.H.players = [b]; }
+    else if ((b.H||0) === leagueTitleHolders.H.val && (b.H||0) > 0) { leagueTitleHolders.H.players.push(b); }
+
+    if ((b.SB||0) > leagueTitleHolders.SB.val) { leagueTitleHolders.SB.val = b.SB||0; leagueTitleHolders.SB.players = [b]; }
+    else if ((b.SB||0) === leagueTitleHolders.SB.val && (b.SB||0) > 0) { leagueTitleHolders.SB.players.push(b); }
+
+    if (obp > leagueTitleHolders.OBP.val) { leagueTitleHolders.OBP.val = obp; leagueTitleHolders.OBP.players = [b]; }
+    else if (Math.abs(obp - leagueTitleHolders.OBP.val) < 0.0001 && obp > 0) { leagueTitleHolders.OBP.players.push(b); }
+  });
+
+  allPitchers.forEach(p => {
+    let outs = p.outs || 0;
+    let era = outs > 0 ? (p.ER * 27) / outs : 9999;
+    let wpct = (p.W + p.L) > 0 ? p.W / (p.W + p.L) : 0;
+
+    if (outs > 0 && era < leagueTitleHolders.ERA.val) { leagueTitleHolders.ERA.val = era; leagueTitleHolders.ERA.players = [p]; }
+    else if (outs > 0 && Math.abs(era - leagueTitleHolders.ERA.val) < 0.0001) { leagueTitleHolders.ERA.players.push(p); }
+
+    if ((p.W||0) > leagueTitleHolders.W.val) { leagueTitleHolders.W.val = p.W||0; leagueTitleHolders.W.players = [p]; }
+    else if ((p.W||0) === leagueTitleHolders.W.val && (p.W||0) > 0) { leagueTitleHolders.W.players.push(p); }
+
+    if ((p.W + p.L) > 0 && wpct > leagueTitleHolders.WPCT.val) { leagueTitleHolders.WPCT.val = wpct; leagueTitleHolders.WPCT.players = [p]; }
+    else if ((p.W + p.L) > 0 && Math.abs(wpct - leagueTitleHolders.WPCT.val) < 0.0001 && wpct > 0) { leagueTitleHolders.WPCT.players.push(p); }
+
+    if ((p.SO||0) > leagueTitleHolders.SO.val) { leagueTitleHolders.SO.val = p.SO||0; leagueTitleHolders.SO.players = [p]; }
+    else if ((p.SO||0) === leagueTitleHolders.SO.val && (p.SO||0) > 0) { leagueTitleHolders.SO.players.push(p); }
+
+    if ((p.HD||0) > leagueTitleHolders.HD.val) { leagueTitleHolders.HD.val = p.HD||0; leagueTitleHolders.HD.players = [p]; }
+    else if ((p.HD||0) === leagueTitleHolders.HD.val && (p.HD||0) > 0) { leagueTitleHolders.HD.players.push(p); }
+
+    if ((p.SV||0) > leagueTitleHolders.SV.val) { leagueTitleHolders.SV.val = p.SV||0; leagueTitleHolders.SV.players = [p]; }
+    else if ((p.SV||0) === leagueTitleHolders.SV.val && (p.SV||0) > 0) { leagueTitleHolders.SV.players.push(p); }
+  });
+}
+
+// 4. 表彰選出基準
+const AWARD_CRITERIA = {
+  mvp: (player, isPit) => player._war || 0,
+  b9: (player, isPit) => player._war || 0,
+  gg: (player, isPit) => {
+    if (isPit) return player.s ? player.s[4] || 50 : 50; 
+    if (player.defPos === '捕') {
+      let allowed = player.SB_Allowed || 0, caught = player.CS_Caught || 0;
+      let total = allowed + caught;
+      return total > 0 ? caught / total : 0;
+    }
+    return (player.FP || 0) - (player.E || 0);
+  }
+};
+
+function awardCriteriaLabel(type, player, isPit) {
+  let sc = AWARD_CRITERIA[type](player, isPit);
+  if (type === 'mvp' || type === 'b9') return `WAR ${sc.toFixed(2)}`;
+  if (isPit) {
+    if (type === 'gg') return `-`; // 🏆 投手GG賞は選出基準を「-」にして伏せます
+    return `守備力 ${sc}`;
+  }
+  if (player.defPos === '捕') return `阻止率 ${sc.toFixed(3).replace(/^0/, '')}`;
+  return `守備 ${sc >= 0 ? '+' : ''}${sc}`;
+}
+
+// 5. タイブレーク処理
+function pennantTieBreaker(a, b, isPitA, isPitB) {
+  let errA = a.E || 0, errB = b.E || 0;
+  if (errA !== errB) return errA - errB;
+  let oppA = isPitA ? (a.outs || 0) : (a.PA || 0);
+  let oppB = isPitB ? (b.outs || 0) : (b.PA || 0);
+  return oppB - oppA;
+}
+
+// 6. ポジション別最良選手選出
+function findBestPlayerForPosition(allBatters, allPitchers, pos, criteriaType) {
+  // 🏆 投手ゴールデングラブ（GG）賞の選出ロジックを本番仕様にアップデート
+  if (pos === '投手' && criteriaType === 'gg') {
+    // 1. 投球回数（outs）の多い順にソートし、上位10名を抽出
+    let sortedByIP = allPitchers.slice().sort((a, b) => (b.outs || 0) - (a.outs || 0));
+    let top10 = sortedByIP.slice(0, 10);
+    
+    // 2. 特能「打球反応」の有無に応じた確率重み付け抽選プールを作成
+    let pool = [];
+    top10.forEach(p => {
+      let abis = Object.values(p.abi || {}).map(a => a.n);
+      let weight = 1; // デフォルトの確率
+      
+      if (abis.includes("打球反応✕") || abis.includes("打球反応△")) {
+        weight = 0; // △・✕持ちはGG賞から「完全除外」
+      } else if (abis.includes("打球反応◎")) {
+        weight = 30; // ◎は当選確率を「30倍（特大優遇）」に
+      } else if (abis.includes("打球反応◯")) {
+        weight = 10; // ◯は当選確率を「10倍」に
+      }
+      
+      for (let w = 0; w < weight; w++) {
+        pool.push(p);
+      }
+    });
+    
+    // 3. 抽選プールからランダムで1名を投手GG賞に決定する
+    let winner = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : allPitchers[0];
+    return winner;
+  }
+
+  let candidates = [];
+  if (pos === '投手') {
+    allPitchers.forEach(p => {
+      let score = AWARD_CRITERIA[criteriaType](p, true);
+      candidates.push({ player: p, score: score, isPit: true });
+    });
+  } else {
+    allBatters.forEach(b => {
+      if (b.defPos === pos) {
+        let score = AWARD_CRITERIA[criteriaType](b, false);
+        candidates.push({ player: b, score: score, isPit: false });
+      }
+    });
+  }
+
+  if (candidates.length === 0) return null;
+
+  candidates.sort((a, b) => {
+    if (Math.abs(a.score - b.score) > 0.0001) return b.score - a.score;
+    return pennantTieBreaker(a.player, b.player, a.isPit, b.isPit);
+  });
+
+  if (criteriaType === 'gg' && pos !== '捕' && candidates[0].score < 0) return null;
+  if (criteriaType === 'gg' && pos === '捕' && candidates[0].score <= 0 && (candidates[0].player.FP || 0) - (candidates[0].player.E || 0) < 0) return null;
+
+  return candidates[0].player;
+}
+
+// 7. 🏆 個人表彰テーブルレンダリング（全成績表示＆はみ出し防止のミニテーブル形式）
+function renderAwards() {
+  if (!pennantResults) return;
+  const selectVal = document.getElementById('pennant-awards-select').value;
+  const displayEl = document.getElementById('pennant-awards-display');
+  if (!displayEl) return;
+
+  calculateLeagueTitleLimits(pennantResults);
+
+  let allBatters = [], allPitchers = [];
+  pennantResults.forEach(t => {
+    t.batters.forEach(b => { b.teamName = t.name; allBatters.push(b); });
+    t.pitchers.forEach(p => { p.teamName = t.name; allPitchers.push(p); });
+  });
+
+  let html = '';
+  let isPitcherAwards = selectVal === 'PITCHER_TITLES';
+  
+  let tblHead = isPitcherAwards
+    ? `<table class="result-table match-mini-table">${PENNANT_AWARD_COLGROUP_PITCHER}${AWARD_THEAD_PITCHER}<tbody>`
+    : `<table class="result-table match-mini-table">${PENNANT_AWARD_COLGROUP_BATTER}${AWARD_THEAD_BATTER}<tbody>`;
+  
+  const renderSingleAwardRow = (title, p, isPit, extra) => {
+    if (!p) {
+      let colCount = isPit ? 13 : 14;
+      return `<tr><td style="font-weight:bold; color:#ff4444; font-size:7px; text-align:left; padding-left:4px;">${title}</td><td colspan="${colCount - 1}" style="color:#aaa; font-size:7px;">該当者なし</td></tr>`;
+    }
+
+    let pc = posCls(isPit ? '投手' : (p.defPos || '指'));
+    let totalCell = `🏆 ${title}` + (extra ? `<br><span style="font-size:6px; color:#1a73e8;">${extra}</span>` : '');
+
+    if (isPit) {
+      let posLabel = p.role || '?';
+      let ERA = p.outs > 0 ? (p.ER * 27) / p.outs : 0, eraStr = p.outs === 0 ? "-" : ERA.toFixed(2);
+      eraStr = p.outs > 0 ? checkAndHighlight(p, 'ERA', ERA, eraStr) : eraStr;
+
+      let fInn = Math.floor(p.outs / 3), rOut = p.outs % 3;
+      let innStr = fInn + (rOut>0?`<span style="font-size:5px;"> ${rOut}/3</span>`:"");
+
+      let K = p.SO || 0, kStr = checkAndHighlight(p, 'SO', K, String(K));
+      let BAVG = p.AB > 0 ? (p.H / p.AB).toFixed(3).replace(/^0/,'') || '.000' : '-';
+      let BB9 = p.outs > 0 ? ((p.BB + p.HBP) * 27 / p.outs).toFixed(2) : '-';
+      let WHIP = p.outs > 0 ? ((p.BB + p.H) * 3 / p.outs).toFixed(2) : '-';
+      let IP_for_fip = p.outs / 3;
+      let FIP = IP_for_fip > 0 ? ((3*(p.BB+p.HBP) - 2*K) / IP_for_fip + 3.0).toFixed(2) : '-';
+
+      let wVal = checkAndHighlight(p, 'W', p.W || 0, String(p.W || 0));
+      let wlStr = `${wVal}-${p.L||0}`;
+
+      let hdVal = checkAndHighlight(p, 'HD', p.HD || 0, String(p.HD || 0));
+      let svVal = checkAndHighlight(p, 'SV', p.SV || 0, String(p.SV || 0));
+
+      return `<tr>
+        <td class="result-total" style="text-align:left !important; padding-left:4px !important; font-weight:bold;">${totalCell}</td>
+        <td class="result-pos-cell pitcher" style="font-size:6.5px;">${posLabel}</td>
+        <td class="res-name-cell pitcher" style="font-size:7.5px; font-weight:bold;">
+          ${p.displayName || p.name}<br><span style="font-size:5.5px; color:#666; font-weight:normal;">(${p.teamName})</span>
+        </td>
+        <td class="c-rate">${eraStr}</td>
+        <td class="c-rbi">${innStr}</td>
+        <td class="c-hr">${kStr}</td>
+        <td class="c-def">${BAVG}</td>
+        <td class="c-sb">${BB9}</td>
+        <td class="c-def">${WHIP}</td>
+        <td class="c-hr">${wlStr}</td>
+        <td class="c-2b">${hdVal}</td>
+        <td class="c-3b">${svVal}</td>
+        <td class="c-ops">${FIP}</td>
+      </tr>`;
+    } else {
+      let AVG = p.AB > 0 ? p.H / p.AB : 0;
+      let OBP = p.PA > 0 ? (p.H + p.BB + p.HBP) / p.PA : 0;
+      let SLG = p.AB > 0 ? p.TB / p.AB : 0;
+      let OPS = p.PA > 0 ? (OBP + SLG).toFixed(3) : '-';
+      let WRC = p.PA > 0 ? calcWrcPlus(calcWoba(p), window.leagueAvgWoba || 0.300, window.leagueRPerPA || 0.115) : '-';
+
+      let avgStr = p.AB > 0 ? AVG.toFixed(3).replace(/^0/,'') || '.000' : '-';
+      avgStr = checkAndHighlight(p, 'AVG', AVG, avgStr);
+
+      let obpStr = p.PA > 0 ? OBP.toFixed(3).replace(/^0/,'') || '.000' : '-';
+      obpStr = checkAndHighlight(p, 'OBP', OBP, obpStr);
+
+      let hrVal = checkAndHighlight(p, 'HR', p.HR || 0, String(p.HR || 0));
+      let rbiVal = checkAndHighlight(p, 'RBI', p.RBI || 0, String(p.RBI || 0));
+
+      let sbVal = checkAndHighlight(p, 'SB', p.SB || 0, String(p.SB || 0));
+      let sbStr = `${sbVal}<span style="font-size:5px;">(${p.CS||0})</span>`;
+
+      let caught = p.CS_Caught || 0;
+      let allowed = p.SB_Allowed || 0;
+      let fpStr = (p.defPos === "捕") ? `<span class="catcher-sb-stat">${(caught + allowed) > 0 ? (caught / (caught + allowed)).toFixed(3).replace(/^0/,'') : '.000'}</span>` : (p.FP || 0);
+
+      return `<tr>
+        <td class="result-total" style="text-align:left !important; padding-left:4px !important; font-weight:bold;">${totalCell}</td>
+        <td class="result-pos-cell ${pc}" style="white-space:nowrap;font-size:6.5px;">${p.batOrder} ${p.defPos}</td>
+        <td class="res-name-cell ${pc}" style="font-size:7.5px; font-weight:bold;">
+          ${p.displayName || p.name}<br><span style="font-size:5.5px; color:#666; font-weight:normal;">(${p.teamName})</span>
+        </td>
+        <td class="c-rate">${avgStr}</td>
+        <td class="c-hr">${hrVal}</td>
+        <td class="c-rbi">${rbiVal}</td>
+        <td class="c-sb">${sbStr}</td>
+        <td class="c-fp">${fpStr}</td>
+        <td class="c-def">${p.E||0}</td>
+        <td class="c-sb">${p.BR||0}</td>
+        <td class="c-rbi">${p.R||0}</td>
+        <td class="c-rate">${obpStr}</td>
+        <td class="c-ops">${OPS}</td>
+        <td class="c-war">${WRC}</td>
+      </tr>`;
+    }
+  };
+
+  if (selectVal === 'MVP_B9') {
+    let allPlayers = [
+      ...allBatters.map(b => ({ p: b, isPit: false })),
+      ...allPitchers.map(pit => ({ p: pit, isPit: true }))
+    ];
+    allPlayers.sort((a, b) => {
+      let warA = a.p._war || 0, warB = b.p._war || 0;
+      if (Math.abs(warA - warB) > 0.0001) return warB - warA;
+      return pennantTieBreaker(a.p, b.p, a.isPit, b.isPit);
+    });
+
+    let mvp = allPlayers.length > 0 ? allPlayers[0].p : null;
+    let mvpIsPit = allPlayers.length > 0 ? allPlayers[0].isPit : false;
+
+    html += `<div style="font-weight:bold; font-size:8.5px; color:#ab47bc; margin-bottom:4px; border-bottom:1px solid #ab47bc; padding-bottom:2px;">🥇 最優秀選手</div>`;
+    html += mvpIsPit ? `<table class="result-table match-mini-table">${PENNANT_AWARD_COLGROUP_PITCHER}${AWARD_THEAD_PITCHER}<tbody>` : `<table class="result-table match-mini-table">${PENNANT_AWARD_COLGROUP_BATTER}${AWARD_THEAD_BATTER}<tbody>`;
+    html += renderSingleAwardRow('MVP', mvp, mvpIsPit, mvp ? awardCriteriaLabel('mvp', mvp, mvpIsPit) : null);
+    html += `</tbody></table>`;
+
+    html += `<div style="font-weight:bold; font-size:8.5px; color:#2e7d32; margin-top:8px; margin-bottom:4px; border-bottom:1px solid #2e7d32; padding-bottom:2px;">⚾ ベストナイン</div>`;
+
+    let b9Pitcher = findBestPlayerForPosition(allBatters, allPitchers, '投手', 'b9');
+    html += `<div style="font-size:7px; font-weight:bold; color:#666; margin:3px 0 1px;">■ 投手</div>`;
+    html += `<table class="result-table match-mini-table">${PENNANT_AWARD_COLGROUP_PITCHER}${AWARD_THEAD_PITCHER}<tbody>`;
+    html += renderSingleAwardRow('投手', b9Pitcher, true, b9Pitcher ? awardCriteriaLabel('b9', b9Pitcher, true) : null);
+    html += `</tbody></table>`;
+
+    html += `<div style="font-size:7px; font-weight:bold; color:#666; margin:6px 0 1px;">■ 野手</div>`;
+    html += `<table class="result-table match-mini-table">${PENNANT_AWARD_COLGROUP_BATTER}${AWARD_THEAD_BATTER}<tbody>`;
+    let positions = ['捕', '一', '二', '三', '遊', '左', '中', '右', '指'];
+    positions.forEach(pos => {
+      let best = findBestPlayerForPosition(allBatters, allPitchers, pos, 'b9');
+      let titleLabel = pos === '指' ? '指名打者' : pos;
+      html += renderSingleAwardRow(titleLabel, best, false, best ? awardCriteriaLabel('b9', best, false) : null);
+    });
+    html += `</tbody></table>`;
+
+  } else if (selectVal === 'BATTER_TITLES') {
+    html += `<div style="font-weight:bold; font-size:8.5px; color:#ab47bc; margin-bottom:4px; border-bottom:1px solid #ab47bc; padding-bottom:2px;">🔥 野手個人タイトル</div>`;
+    html += tblHead;
+    
+    let hAvg = leagueTitleHolders.AVG.players[0];
+    html += renderSingleAwardRow('首位打者', hAvg, false, hAvg ? leagueTitleHolders.AVG.val.toFixed(3).replace(/^0/,'') : null);
+
+    let hHr = leagueTitleHolders.HR.players[0];
+    html += renderSingleAwardRow('本塁打王', hHr, false, hHr ? `${leagueTitleHolders.HR.val}本` : null);
+
+    let hRbi = leagueTitleHolders.RBI.players[0];
+    html += renderSingleAwardRow('打点王', hRbi, false, hRbi ? `${leagueTitleHolders.RBI.val}点` : null);
+
+    let hHits = leagueTitleHolders.H.players[0];
+    html += renderSingleAwardRow('最多安打', hHits, false, hHits ? `${leagueTitleHolders.H.val}安打` : null);
+
+    let hSb = leagueTitleHolders.SB.players[0];
+    html += renderSingleAwardRow('盗塁王', hSb, false, hSb ? `${leagueTitleHolders.SB.val}盗塁` : null);
+
+    let hObp = leagueTitleHolders.OBP.players[0];
+    html += renderSingleAwardRow('最高出塁率', hObp, false, hObp ? leagueTitleHolders.OBP.val.toFixed(3).replace(/^0/,'') : null);
+    
+    html += `</tbody></table>`;
+
+  } else if (selectVal === 'PITCHER_TITLES') {
+    html += `<div style="font-weight:bold; font-size:8.5px; color:#ab47bc; margin-bottom:4px; border-bottom:1px solid #ab47bc; padding-bottom:2px;">⚾ 投手個人タイトル</div>`;
+    html += tblHead;
+
+    let hEra = leagueTitleHolders.ERA.players[0];
+    html += renderSingleAwardRow('最優秀防御率', hEra, true, hEra ? leagueTitleHolders.ERA.val.toFixed(2) : null);
+
+    let hW = leagueTitleHolders.W.players[0];
+    html += renderSingleAwardRow('最多勝', hW, true, hW ? `${leagueTitleHolders.W.val}勝` : null);
+
+    let hWpct = leagueTitleHolders.WPCT.players[0];
+    html += renderSingleAwardRow('最高勝率', hWpct, true, hWpct ? leagueTitleHolders.WPCT.val.toFixed(3).replace(/^0/,'') : null);
+
+    let hSo = leagueTitleHolders.SO.players[0];
+    html += renderSingleAwardRow('最多奪三振', hSo, true, hSo ? `${leagueTitleHolders.SO.val}奪三振` : null);
+
+    let hHd = leagueTitleHolders.HD.players[0];
+    html += renderSingleAwardRow('最優秀中継ぎ', hHd, true, hHd ? `${leagueTitleHolders.HD.val}HD` : null);
+
+    let hSv = leagueTitleHolders.SV.players[0];
+    html += renderSingleAwardRow('最多セーブ', hSv, true, hSv ? `${leagueTitleHolders.SV.val}S` : null);
+    
+    html += `</tbody></table>`;
+
+} else if (selectVal === 'GOLDEN_GLOVE') {
+    html += `<div style="font-weight:bold; font-size:8.5px; color:#ab47bc; margin-bottom:4px; border-bottom:1px solid #ab47bc; padding-bottom:2px;">🛡️ ゴールデングラブ</div>`;
+
+    let bestP = findBestPlayerForPosition(allBatters, allPitchers, '投手', 'gg');
+    html += `<div style="font-size:7px; font-weight:bold; color:#666; margin:3px 0 1px;">■ 投手</div>`;
+    html += `<table class="result-table match-mini-table">${PENNANT_AWARD_COLGROUP_PITCHER}${AWARD_THEAD_PITCHER}<tbody>`;
+    html += renderSingleAwardRow('投手', bestP, true, bestP ? awardCriteriaLabel('gg', bestP, true) : null);
+    html += `</tbody></table>`;
+
+    html += `<div style="font-size:7px; font-weight:bold; color:#666; margin:6px 0 1px;">■ 野手</div>`;
+    html += `<table class="result-table match-mini-table">${PENNANT_AWARD_COLGROUP_BATTER}${AWARD_THEAD_BATTER}<tbody>`;
+    let ggPositions = [
+      { label: '捕手', pos: '捕' },
+      { label: '一塁手', pos: '一' },
+      { label: '二塁手', pos: '二' },
+      { label: '三塁手', pos: '三' },
+      { label: '遊撃手', pos: '遊' },
+      { label: '左翼手', pos: '左' },
+      { label: '中堅手', pos: '中' },
+      { label: '右翼手', pos: '右' }
+    ];
+    ggPositions.forEach(item => {
+      let best = findBestPlayerForPosition(allBatters, allPitchers, item.pos, 'gg');
+      html += renderSingleAwardRow(item.label, best, false, best ? awardCriteriaLabel('gg', best, false) : null);
+    });
+    html += `</tbody></table>`;
+
+  } else if (selectVal === 'GREAT_RECORDS') {
+    html += `<div style="font-weight:bold; font-size:8.5px; color:#ab47bc; margin-bottom:4px; border-bottom:1px solid #ab47bc; padding-bottom:2px;">🌟 大記録</div>`;
+
+    // ① トリプルスリー（打率.300・30本塁打・30盗塁以上）
+    let triple3List = allBatters.filter(b => {
+      let avg = b.AB > 0 ? Math.round((b.H / b.AB) * 1000) / 1000 : 0;
+      return avg >= 0.300 && (b.HR||0) >= 30 && (b.SB||0) >= 30;
+    });
+    html += `<div style="font-size:7.5px; font-weight:bold; color:#1a73e8; margin:6px 0 2px;">⚡ トリプルスリー（打率.300・30本塁打・30盗塁 以上）</div>`;
+    if (triple3List.length === 0) {
+      html += `<div style="font-size:7px; color:#888; margin-bottom:4px;">該当者なし</div>`;
+    } else {
+      triple3List.forEach(b => {
+        let avgStr = (b.H / b.AB).toFixed(3).replace(/^0/, '');
+        html += `<div style="font-size:7px; background:#fff8e1; border:1px solid #e2c070; padding:2px 5px; border-radius:3px; margin-bottom:2px;">
+          ${b.displayName || b.name}（${b.teamName}）　打率${avgStr}　${b.HR}本塁打　${b.SB}盗塁
+        </div>`;
+      });
+    }
+
+    // ② 40-40（40本塁打・40盗塁以上）
+    let forty40List = allBatters.filter(b => (b.HR||0) >= 40 && (b.SB||0) >= 40);
+    html += `<div style="font-size:7.5px; font-weight:bold; color:#1a73e8; margin:8px 0 2px;">⚡ 40-40（40本塁打・40盗塁 以上）</div>`;
+    if (forty40List.length === 0) {
+      html += `<div style="font-size:7px; color:#888; margin-bottom:4px;">該当者なし</div>`;
+    } else {
+      forty40List.forEach(b => {
+        html += `<div style="font-size:7px; background:#fff8e1; border:1px solid #e2c070; padding:2px 5px; border-radius:3px; margin-bottom:2px;">
+          ${b.displayName || b.name}（${b.teamName}）　${b.HR}本塁打　${b.SB}盗塁
+        </div>`;
+      });
+    }
+
+    // ③ サイクルヒット（1試合で単打・二塁打・三塁打・本塁打を達成）
+    let cycleRecs = (pennantState && pennantState.bigRecords) ? pennantState.bigRecords.filter(r => r.type === 'cycle') : [];
+    html += `<div style="font-size:7.5px; font-weight:bold; color:#1a73e8; margin:8px 0 2px;">🔄 サイクルヒット</div>`;
+    if (cycleRecs.length === 0) {
+      html += `<div style="font-size:7px; color:#888; margin-bottom:4px;">該当者なし</div>`;
+    } else {
+      cycleRecs.forEach(r => {
+        html += `<div style="font-size:7px; background:#e3f2fd; border:1px solid #90caf9; padding:2px 5px; border-radius:3px; margin-bottom:2px;">
+          第${r.round + 1}試合目　${r.playerName}（${r.teamName}）
+        </div>`;
+      });
+    }
+
+    // ④ ノーヒットノーラン・完全試合（このゲームの仕様上、継投での達成のみ）
+    let noHitRecs = (pennantState && pennantState.bigRecords) ? pennantState.bigRecords.filter(r => r.type === 'nohitter' || r.type === 'perfect') : [];
+    html += `<div style="font-size:7.5px; font-weight:bold; color:#1a73e8; margin:8px 0 2px;">🛡️ ノーヒットノーラン・完全試合</div>`;
+    if (noHitRecs.length === 0) {
+      html += `<div style="font-size:7px; color:#888; margin-bottom:4px;">該当者なし</div>`;
+    } else {
+      noHitRecs.forEach(r => {
+        let label = r.type === 'perfect' ? '完全試合' : 'ノーヒットノーラン';
+        html += `<div style="font-size:7px; background:#e8f5e9; border:1px solid #a5d6a7; padding:2px 5px; border-radius:3px; margin-bottom:2px;">
+          第${r.round + 1}試合目　${label}　達成チーム：${r.teamName}
+        </div>`;
+      });
+    }
+  }
+
+  displayEl.innerHTML = html;
+}
+
+window.calculateLeagueWAR = calculateLeagueWAR;
+window.generateTeamSummaryHtml = generateTeamSummaryHtml;
+window.checkAndHighlight = checkAndHighlight;
+window.calculateLeagueTitleLimits = calculateLeagueTitleLimits;
+window.renderAwards = renderAwards;
+
 window.addEventListener("load", function(){
   renderSaveUI(); teamReset(); setupDefaultMatchTeams();
   document.getElementById('team-name-display').textContent = myTeamName;
   document.getElementById('edit-team-name').value = myTeamName;
+  loadExternalNames(); // ★ページ読み込み完了時に非同期での名前結合処理を起動
 });
 </script>
 
@@ -6025,6 +8111,16 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 </script>
+
+<!-- 🏆 【新規追加】ペナント注目ゲーム・実況詳細ログポップアップ 🏆 -->
+<div id="pennant-log-popup" class="popup" style="display:none;" onclick="if(event.target===this)closePennantLogPopup()">
+  <div class="popup-inner" style="max-width:480px; width:86%; height:70%; display:flex; flex-direction:column; gap:6px; position:fixed; padding:12px;" onclick="event.stopPropagation()">
+    <span class="close-btn" onclick="closePennantLogPopup()" style="position:absolute; top:4px; right:10px; font-size:20px;">×</span>
+    <div id="pennant-log-title" style="font-size:11px; font-weight:bold; border-bottom:2px solid #ff9800; padding-bottom:4px; color:#333;"></div>
+    <div id="pennant-log-score"></div>
+    <div id="pennant-log-content" style="overflow-y:auto; flex:1; font-size:9.5px; line-height:1.6; background:#f9f9f9; padding:8px; border:1px solid #ddd; border-radius:4px;"></div>
+  </div>
+</div>
 
 </body>
 </html>
