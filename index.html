@@ -1560,7 +1560,8 @@ function getPlayerNameByContext(context) {
 
 // 🌐 外部（GitHub）から名前ファイルを非同期で読み込み、現在の名簿へ結合する関数
 async function loadExternalNames() {
-  const url = "https://cdn.jsdelivr.net/gh/yakisoba1229/yyotest@main/names.json";
+  // CORS通信に対応しており、即座に更新が反映されるRaw URLに切り替えます
+  const url = "https://raw.githubusercontent.com/yakisoba1229/yyotest/main/names.json";
   
   try {
     const controller = new AbortController();
