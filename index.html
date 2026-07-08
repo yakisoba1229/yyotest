@@ -1136,7 +1136,7 @@ body {
 
 
 <div id="abiPickerPopup" class="popup" style="display:none;" onclick="if(event.target===this)closeAbiPicker(false)">
-  <div class="popup-inner" style="position:fixed;top:0;left:0;right:0;bottom:0;margin:auto;width:88%;max-width:340px;height:75%;max-height:460px;display:flex;flex-direction:column;gap:6px;background:#fff;border-radius:8px;padding:12px;box-shadow:0 4px 20px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
+<div class="popup-inner" style="position:fixed;top:0;left:0;right:0;bottom:0;margin:auto;width:96%;max-width:680px;height:90%;max-height:900px;display:flex;flex-direction:column;gap:6px;background:#fff;border-radius:8px;padding:12px;box-shadow:0 4px 20px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <span id="abiPickerTitle" style="font-size:10px;font-weight:bold;"></span>
       <span id="abiPickerCount" style="font-size:9px;color:#888;">0/10</span>
@@ -1399,14 +1399,15 @@ body {
     <input type="number" id="bulk-value" value="50" min="1" max="200" style="width:46px; font-size:9px; text-align:center;">
     <button class="sm-btn" style="background:#267; color:#fff; margin-left:6px;" onclick="executeBulkChange()">決定</button>
     <br>
-    <span>一括入力:</span>
-    <select id="bulk-text-target">
+ <span>一括入力:</span>
+    <select id="bulk-text-target" onchange="onBulkTextTargetChange()">
       <option value="name_all">全体名前</option>
       <option value="abi_fielder">野手特能</option>
       <option value="abi_pitcher">投手特能</option>
     </select>
-    <input type="text" id="bulk-text-value" placeholder="名前 or 特能名" style="width:90px; font-size:9px;">
-    <button class="sm-btn" style="background:#267; color:#fff; margin-left:6px;" onclick="executeBulkTextInput()">決定</button>
+    <input type="text" id="bulk-text-value" placeholder="名前を入力" style="width:90px; font-size:9px;">
+    <button id="bulk-text-abi-btn" class="sm-btn" style="background:#8e24aa; color:#fff; display:none;" onclick="openAbiPicker(document.getElementById('bulk-text-target').value==='abi_fielder'?'fielder':'pitcher','ALL')">特能を選ぶ</button>
+    <button id="bulk-text-confirm-btn" class="sm-btn" style="background:#267; color:#fff; margin-left:6px;" onclick="executeBulkTextInput()">決定</button>
     <br>
     <span>ランダム生成:</span>
     <select id="bulk-random-target">
@@ -1822,9 +1823,27 @@ function abiHtmlObj(obj,max=99){
   const arr=Object.values(obj).slice(0,max);if(!arr.length)return'';
   return arr.map(a=>`<span class="${getDraftAbiCls(a)}">${a.n}</span>`).join('');
 }
-// 前評判表示用：abi objectからN個だけ表示
-function abiPreview(obj,n=1){
-  return Object.values(obj).slice(0,n);
+// ★実際には持っていない特能を、本人のabiと被らないようにランダムで1つ選ぶ(偽の前評判表示用)
+function pickFakeAbility(realAbiObj, abiType) {
+  let pools = ABI_GROUPS.common.concat(abiType === "F" ? ABI_GROUPS.fielder : ABI_GROUPS.pitcher);
+  let allEntries = [];
+  pools.forEach(g => { (g.list || []).forEach(item => allEntries.push(item)); });
+  let realNames = new Set(Object.values(realAbiObj || {}).map(a => a.n));
+  let candidates = allEntries.filter(a => !realNames.has(a.n));
+  if (candidates.length === 0) return null;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+// 前評判表示用：abi objectからN個だけ表示。約50%は実際には持っていない偽の特能に差し替える(スカウト精度が低い設定)
+function abiPreview(obj,n=1,abiType="F"){
+  const real = Object.values(obj).slice(0,n);
+  return real.map(a => {
+    if (Math.random() < 0.5) {
+      const fake = pickFakeAbility(obj, abiType);
+      if (fake) return fake;
+    }
+    return a;
+  });
 }
 
 function posCls(p){
@@ -2245,6 +2264,29 @@ function stars(avg) {
   return "★".repeat(count);
 }
 
+// 🎙️ ドラフト・補強カードに1行だけ乗るスカウトコメント。将来的にGitHub外部ファイル化する予定
+// hint:false は完全に意味の無い雑談。hint:true はcheckの条件を満たす時だけ候補になる「ちょっとしたヒント」
+const DRAFT_FLAVOR_POOL = [
+  { text: "プロへ強い憧れ", hint: false },
+  { text: "誰よりも真面目", hint: false },
+  { text: "チームメイトからの信頼が厚い", hint: false },
+  { text: "球界屈指の愛されキャラ", hint: false },
+  { text: "パワー自慢", hint: true, check: (p, isPit) => !isPit && p.aS[1] > p.pS[1] },
+  { text: "走力が武器", hint: true, check: (p, isPit) => !isPit && p.aS[2] === Math.max(...p.aS) },
+  { text: "球威が武器", hint: true, check: (p, isPit) => isPit && cvSpeed(p.aS[0]) === Math.max(cvSpeed(p.aS[0]), p.aS[1], p.aS[2], p.aS[3], p.aS[4]) },
+  { text: "過小評価ぎみ", hint: true, check: (p) => (p.aAvg - p.pAvg) >= 5 },
+  { text: "大怪我から復活", hint: true, check: (p) => Math.abs(p.pAvg - p.aAvg) >= 8 },
+  { text: "目立った弱点がない", hint: true, check: (p, isPit) => p.aS.every((v,i) => { let val=(isPit&&i===0)?cvSpeed(v):v; let rk=getRank(val)[0]; return rk!=='F' && rk!=='G'; }) },
+  { text: "チャンスに強い", hint: true, check: (p) => { let e = p.abi && p.abi.f_cha; return !!(e && e.idx >= 2); } }
+];
+
+// 選手データから条件に合うスカウトコメントを1つ抽選する(ドラフト・補強共通)
+function pickDraftFlavor(p, isPit) {
+  let eligible = DRAFT_FLAVOR_POOL.filter(f => !f.hint || (f.check && f.check(p, isPit)));
+  if (eligible.length === 0) return "";
+  return eligible[Math.floor(Math.random() * eligible.length)].text;
+}
+
 function genPlayer(posType,tierKey){
   const T=TIERS[tierKey];
   const isPit=posType==='pitcher';
@@ -2337,6 +2379,10 @@ function genPlayer(posType,tierKey){
 
           const avg=(s,ip)=>ip?Math.round([cvSpeed(s[0]),...s.slice(1)].reduce((a,b)=>a+b)/5):Math.round(s.reduce((a,b)=>a+b)/5);
   const pAvg=avg(pS,isPit),aAvg=avg(aS,isPit);
+  // ★星評価のブレ：通常は±10。ただし覚醒選手だけは「前評判が弱い選手を避けたくなる」のを防ぐため、0〜-10のマイナス方向にのみブレる
+  const starAvg = awk
+    ? cl(pAvg - Math.round(Math.random()*10), 1, 120)
+    : cl(pAvg + Math.round((Math.random()-.5)*20), 1, 120);
 
   const abiType=isPit?"P":"F";
   const abiObj={};
@@ -2345,7 +2391,8 @@ function genPlayer(posType,tierKey){
 
   const previewCount=isGenius?Math.min(2,Object.keys(abiObj).length)
     :(Object.keys(abiObj).length>0&&Math.random()<.65?1:0);
-  const visAbi=abiPreview(abiObj,previewCount);
+  const visAbi=abiPreview(abiObj,previewCount,abiType);
+  const scoutComment=pickDraftFlavor({aS,pS,aAvg,pAvg,abi:abiObj},isPit); // ★カード下部に出すスカウトコメント
 
   const potBase={1:70,2:62,3:55,4:48,mid:38,low:25};
   const pot=cl((potBase[tierKey]||40)+ri(25)+(isGenius?15:0)+(awk?8:0),10,100);
@@ -2354,7 +2401,7 @@ function genPlayer(posType,tierKey){
     id:Math.random().toString(36).substr(2,9),
     name:getPlayerNameByContext("draft"),posType,tierKey,draftRound:null,
     isGenius,awk,gBonus,ab,
-    aS,pS,pAvg,aAvg,
+    aS,pS,pAvg,aAvg,starAvg,scoutComment,
     abi:abiObj,
     visAbi,
     bat: isPit ? (Math.random() < 0.5 ? 'R' : 'L') : (Math.random() < 0.48 ? 'R' : Math.random() < 0.96 ? 'L' : 'S'),
@@ -2747,10 +2794,10 @@ function cardHtml(p,phase){
     <span class="dc-badge" style="background:${POS_BG[p.posType]};color:#fff">${POS_LBL[p.posType]}</span>
     <div class="dc-name">${p.name}</div>
     ${p.isGenius?'<div style="font-size:5.5px;color:#e040fb;font-weight:bold;margin-bottom:1px">★ 天才型</div>':''}
-    <div class="dc-stars">${stars(p.pAvg)}</div>
-    <div class="dc-ov"><span style="color:#666;font-size:5px">総合</span> <span class="r${prc}">${pr}${p.pAvg}</span></div>
+    <div class="dc-stars">${stars(p.starAvg)}</div>
     <div class="dc-sg">${statsHtml}</div>
     <div class="dc-abi">${p.visAbi.map(a=>`<span class="${getDraftAbiCls(a)}">${a.n}</span>`).join('')}</div>
+    ${p.scoutComment ? `<div class="dc-comment" style="font-size:5.5px;color:#9575cd;text-align:center;margin-top:2px;font-style:italic;">「${p.scoutComment}」</div>` : ''}
   </div>`;
 }
 
@@ -3551,23 +3598,24 @@ function executeBulkChange() {
   renderEditScreen();
 }
 
-// 🆕 一括入力：全体名前 or 特能名を、条件に一致する選手全員へまとめて適用する
+// 🆕 一括入力：ドロップダウンに応じてテキスト欄／特能ボタンの表示を切り替える
+function onBulkTextTargetChange() {
+  const target = document.getElementById('bulk-text-target').value;
+  const isAbi = (target === 'abi_fielder' || target === 'abi_pitcher');
+  document.getElementById('bulk-text-value').style.display = isAbi ? 'none' : '';
+  document.getElementById('bulk-text-abi-btn').style.display = isAbi ? '' : 'none';
+  document.getElementById('bulk-text-confirm-btn').style.display = isAbi ? 'none' : '';
+}
+
+// 🆕 一括入力：「全体名前」の場合のみここで処理する(特能は共有ポップアップ側のcloseAbiPickerが処理済み)
 function executeBulkTextInput() {
   syncEditData(); // ★他の未反映の手入力を消さないため
   const target = document.getElementById('bulk-text-target').value;
+  if (target !== 'name_all') return;
   const text = document.getElementById('bulk-text-value').value.trim();
   if (!text) { alert('値を入力してください'); return; }
-
-  if (target === 'name_all') {
-    tF.forEach(f => f.name = text);
-    tP.forEach(p => p.name = text);
-  } else {
-    const meta = ABI_LOOKUP[text];
-    if (!meta) { alert(`「${text}」という特能は存在しません`); return; } // ★存在しない特能名はエラー
-    const abiObj = { abi_0: { n: text, p: meta.p || 0, ...(meta.c ? { c: meta.c } : {}) } };
-    if (target === 'abi_fielder') tF.forEach(f => { f.abi = JSON.parse(JSON.stringify(abiObj)); });
-    else tP.forEach(p => { p.abi = JSON.parse(JSON.stringify(abiObj)); });
-  }
+  tF.forEach(f => f.name = text);
+  tP.forEach(p => p.name = text);
   renderEditScreen();
 }
 
@@ -3660,11 +3708,14 @@ let _abiPickerCtx = null;
 function openAbiPicker(type, idx) {
   syncEditData();
   _abiPickerCtx = {type, idx};
-  const player = type==='fielder' ? tF[idx] : tP[idx];
-  const curNames = new Set(Object.values(player.abi||{}).map(a=>a.n));
+  const isBulk = (idx === 'ALL'); // ★一括入力(全選手適用)からの呼び出しかどうか
+  const player = isBulk ? null : (type==='fielder' ? tF[idx] : tP[idx]);
+  const curNames = isBulk ? new Set() : new Set(Object.values(player.abi||{}).map(a=>a.n));
   const cats = type==='fielder' ? ['common','fielder'] : ['common','pitcher'];
 
-  document.getElementById('abiPickerTitle').textContent = `特能選択 — ${player.name||'選手'}`;
+  document.getElementById('abiPickerTitle').textContent = isBulk
+    ? `特能選択 — 全${type==='fielder'?'野手':'投手'}に一括適用`
+    : `特能選択 — ${player.name||'選手'}`;
 
   let html = '';
   cats.forEach(cat => {
@@ -3700,14 +3751,19 @@ function updateAbiPickerCount(el) {
 function closeAbiPicker(save) {
   if(save && _abiPickerCtx) {
     const {type, idx} = _abiPickerCtx;
-    const player = type==='fielder' ? tF[idx] : tP[idx];
     const checked = Array.from(document.querySelectorAll('#abiPickerList input[type=checkbox]:checked')).slice(0,10);
     let newAbi = {};
     checked.forEach((cb, i) => {
       const meta = ABI_LOOKUP[cb.value]||{};
       newAbi[`abi_${i}`] = { n: cb.value, p: meta.p||0, ...(meta.c ? {c:meta.c} : {}) };
     });
-    player.abi = newAbi;
+    if (idx === 'ALL') {
+      const arr = type==='fielder' ? tF : tP;
+      arr.forEach(p => { p.abi = JSON.parse(JSON.stringify(newAbi)); }); // ★全員分、参照を分けて同じ内容を適用
+    } else {
+      const player = type==='fielder' ? tF[idx] : tP[idx];
+      player.abi = newAbi;
+    }
   }
   document.getElementById('abiPickerPopup').style.display='none';
   _abiPickerCtx = null;
@@ -5523,14 +5579,16 @@ if(atBat.isSO) {
                   let dpMsg = pickFlavorText("併殺打", false, ctx);
                   if (dpMsg) actionLog += ` ${dpMsg}`;
                   if(pStat) pStat.outs += 1; if(bStat) bStat.DP=(bStat.DP||0)+1;
-                  rRuns += advanceRunnersOnOut(bases, "併殺", tObj, defAvg, outs + tObj.addedOuts, offStats);
+                  rRuns += advanceRunnersOnOut(bases, "併殺", tObj, defAvg, outs + tObj.addedOuts + 1, offStats); // ★併殺は打者自身も必ずアウトになるため+1しないと3人目のアウトが数え漏れる
               } else { 
                   actionLog += `（併殺崩れ）`; 
-                  rRuns += advanceRunnersOnOut(bases, "ゴロ", tObj, defAvg, outs + tObj.addedOuts, offStats);
+                  rRuns += advanceRunnersOnOut(bases, "ゴロ", tObj, defAvg, outs + tObj.addedOuts + 1, offStats); // ★併殺崩れでも打者は一塁でアウトになるため同様に+1
               }
             } else {
               if (!atBat.isSO) { 
-                rRuns += advanceRunnersOnOut(bases, atBat.isGrounder ? "ゴロ" : "フライ", tObj, defAvg, outs + tObj.addedOuts, offStats);
+                // ★ゴロで打者が一塁封殺される場合は打者自身のアウトも数えないと得点が入ってしまう(フライはこの補正の対象外)
+                let outsForThisPlay = outs + tObj.addedOuts + (atBat.isGrounder ? 1 : 0);
+                rRuns += advanceRunnersOnOut(bases, atBat.isGrounder ? "ゴロ" : "フライ", tObj, defAvg, outsForThisPlay, offStats);
               }
             }
             
@@ -6030,14 +6088,21 @@ function startMatch(times = 1) {
   let matchScoreBody = document.getElementById("match-score-body");
   let matchLog = document.getElementById("match-log");
   let statsArea = document.getElementById("match-stats-area");
-  let statsA = createEmptyStats(), statsB = createEmptyStats();
+  // ★チャレンジモード中は自分の成績(statsA)を、負けて終了するまで同じオブジェクトに蓄積し続ける
+  let statsA;
+  if (challengeState.active && challengeState.myStats) {
+    statsA = challengeState.myStats; // 継続中：前の試合までの成績を引き継ぐ
+  } else {
+    statsA = createEmptyStats();
+    statsA.w = 0; statsA.l = 0; statsA.d = 0;
+    if (challengeState.active) challengeState.myStats = statsA; // チャレンジ開始1試合目：ここで新規作成して保持する
+  }
+  let statsB = createEmptyStats(); // 相手の成績はその試合限りでよいので毎回リセット
+  statsB.w = 0; statsB.l = 0; statsB.d = 0;
   let cloneA = JSON.parse(JSON.stringify(matchMyTeam)), cloneB = JSON.parse(JSON.stringify(matchRivalTeam));
   let totalScoreA = 0, totalScoreB = 0, lastRes = null;
 
   ENABLE_MATCH_LOG = (times === 1);
-  // ★ 累積するチーム全体の勝敗数を正しく初期化
-  statsA.w = 0; statsA.l = 0; statsA.d = 0;
-  statsB.w = 0; statsB.l = 0; statsB.d = 0;
   for(let i=0; i<times; i++) {
     lastRes = simulateGame(cloneA, cloneB, statsA, statsB);
     if(!lastRes) break;
@@ -7524,12 +7589,13 @@ function genReinforcePlayer(posType, type) {
   
   const previewCount = isGenius ? Math.min(2, Object.keys(abiObj).length) : (Object.keys(abiObj).length > 0 && Math.random() < 0.65 ? 1 : 0);
   const visAbi = abiPreview(abiObj, previewCount);
+  const scoutComment = pickDraftFlavor({aS, pS, aAvg, pAvg, abi: abiObj}, isPit); // ★カード下部に出すスカウトコメント
   
   return {
     id: Math.random().toString(36).substr(2, 9),
     name: getPlayerNameByContext(type), posType, draftRound: null,
     isGenius, awk, gBonus, ab,
-    aS, pS, pAvg, aAvg,
+    aS, pS, pAvg, aAvg, scoutComment,
     abi: abiObj, visAbi,
     bat: isPit ? (Math.random() < 0.5 ? 'R' : 'L') : (Math.random() < 0.48 ? 'R' : Math.random() < 0.96 ? 'L' : 'S'),
     p: cl(40 + ri(25), 10, 100), g: [0,0,0,0,0], aw_arr: [false,false,false,false,false], pchg: 0, prv: false,
@@ -7575,6 +7641,7 @@ function scoutCardHtml(p) {
     <div class="dc-ov"><span style="color:#666;font-size:5px">総合</span> <span class="r${prc}">${overallStr}</span></div>
     <div class="dc-sg">${statsHtml}</div>
     <div class="dc-abi">${p.visAbi.map(a => `<span class="${getDraftAbiCls(a)}">${a.n}</span>`).join('')}</div>
+    ${p.scoutComment ? `<div class="dc-comment" style="font-size:5.5px;color:#9575cd;text-align:center;margin-top:2px;font-style:italic;">「${p.scoutComment}」</div>` : ''}
   </div>`;
 }
 
