@@ -1262,6 +1262,27 @@ body {
 <script type="application/json" id="cpu-team-data">
 []
 </script>
+<script type="application/json" id="challenge-ladder-data">
+[]
+</script>
+<script type="application/json" id="draft-flavor-data">
+[
+  { "text": "プロへ強い憧れ", "rule": null },
+  { "text": "誰よりも真面目", "rule": null },
+  { "text": "チームメイトからの信頼が厚い", "rule": null },
+  { "text": "球界屈指の愛されキャラ", "rule": null },
+
+  { "text": "パワー自慢", "rule": { "op": "statCompare", "statIdx": 1, "compare": ">", "against": "pS" }, "forType": "fielder" },
+  { "text": "走力が武器", "rule": { "op": "isMaxStat", "statIdx": 2 }, "forType": "fielder" },
+  { "text": "ミートが武器", "rule": { "op": "isMaxStat", "statIdx": 0 }, "forType": "fielder" },
+  { "text": "球威が武器", "rule": { "op": "isMaxStat", "statIdx": 0 }, "forType": "pitcher" },
+  { "text": "過小評価ぎみ", "rule": { "op": "avgDiff", "compare": ">=", "value": 5 } },
+  { "text": "大怪我から復活", "rule": { "op": "avgDiffAbs", "compare": ">=", "value": 8 } },
+  { "text": "目立った弱点がない", "rule": { "op": "allStatsAtLeastRank", "minRank": "E" } },
+  { "text": "チャンスに強い", "rule": { "op": "hasAbilityTier", "group": "f_cha", "minTierIdx": 2 } },
+  { "text": "怪童", "rule": { "op": "statCompare", "statIdx": 1, "compare": ">=", "against": 85 }, "forType": "fielder" }
+]
+</script>
 
 <div id="panel-pennant" class="mode-panel">
   <div class="order-title">🏆 ペナントモード</div>
@@ -2264,28 +2285,73 @@ function stars(avg) {
   return "★".repeat(count);
 }
 
-// 🎙️ ドラフト・補強カードに1行だけ乗るスカウトコメント。将来的にGitHub外部ファイル化する予定
-// hint:false は完全に意味の無い雑談。hint:true はcheckの条件を満たす時だけ候補になる「ちょっとしたヒント」
-const DRAFT_FLAVOR_POOL = [
-  { text: "プロへ強い憧れ", hint: false },
-  { text: "誰よりも真面目", hint: false },
-  { text: "チームメイトからの信頼が厚い", hint: false },
-  { text: "球界屈指の愛されキャラ", hint: false },
-  { text: "パワー自慢", hint: true, check: (p, isPit) => !isPit && p.aS[1] > p.pS[1] },
-  { text: "走力が武器", hint: true, check: (p, isPit) => !isPit && p.aS[2] === Math.max(...p.aS) },
-  { text: "球威が武器", hint: true, check: (p, isPit) => isPit && cvSpeed(p.aS[0]) === Math.max(cvSpeed(p.aS[0]), p.aS[1], p.aS[2], p.aS[3], p.aS[4]) },
-  { text: "過小評価ぎみ", hint: true, check: (p) => (p.aAvg - p.pAvg) >= 5 },
-  { text: "大怪我から復活", hint: true, check: (p) => Math.abs(p.pAvg - p.aAvg) >= 8 },
-  { text: "目立った弱点がない", hint: true, check: (p, isPit) => p.aS.every((v,i) => { let val=(isPit&&i===0)?cvSpeed(v):v; let rk=getRank(val)[0]; return rk!=='F' && rk!=='G'; }) },
-  { text: "チャンスに強い", hint: true, check: (p) => { let e = p.abi && p.abi.f_cha; return !!(e && e.idx >= 2); } }
-];
+// 🎙️ 判定の「解釈エンジン」。新しい判定パターンを増やしてもここは変更不要(JSON側のruleだけで表現する)
+function evalDraftCondition(rule, p, isPit) {
+  if (!rule) return true;
+  if (rule.forType === 'pitcher' && !isPit) return false;
+  if (rule.forType === 'fielder' && isPit) return false;
+
+  const getStat = (src, idx) => {
+    let v = (src === 'pS' ? p.pS : p.aS)[idx];
+    return (isPit && idx === 0) ? cvSpeed(v) : v; // 投手の0番目(球速)だけ換算する
+  };
+  const cmp = (a, op, b) => op === '>' ? a > b : op === '>=' ? a >= b : op === '<' ? a < b : op === '<=' ? a <= b : op === '==' ? a === b : false;
+
+  switch (rule.op) {
+    case 'statCompare': // 能力値どうしの比較(例：実力のパワー vs 前評判のパワー)
+      return cmp(getStat('aS', rule.statIdx), rule.compare, rule.against === 'pS' ? getStat('pS', rule.statIdx) : rule.against);
+    case 'isMaxStat': { // 指定した能力が、その選手の中で一番高いか
+      let vals = p.aS.map((v, i) => (isPit && i === 0) ? cvSpeed(v) : v);
+      return vals[rule.statIdx] === Math.max(...vals);
+    }
+    case 'avgDiff': // (実力総合 - 前評判総合)を比較
+      return cmp(p.aAvg - p.pAvg, rule.compare, rule.value);
+    case 'avgDiffAbs': // |前評判 - 実力| を比較(乖離の大きさ)
+      return cmp(Math.abs(p.pAvg - p.aAvg), rule.compare, rule.value);
+    case 'allStatsAtLeastRank': { // 全能力が指定ランク以上か
+      const order = ['G','F','E','D','C','B','A','S','Splus'];
+      let minIdx = order.indexOf(rule.minRank);
+      return p.aS.every((v, i) => {
+        let val = (isPit && i === 0) ? cvSpeed(v) : v;
+        return order.indexOf(getRank(val)[0]) >= minIdx;
+      });
+    }
+    case 'hasAbilityTier': { // 指定した特能グループを、指定tier以上で持っているか
+      let e = p.abi && p.abi[rule.group];
+      return !!(e && e.idx >= rule.minTierIdx);
+    }
+    default: return false;
+  }
+}
+
+// 🎙️ 表示テキスト本体。外部ファイル化の対象。読み込めなければ空のままで、コメントが一切出ない状態で動作する
+let DRAFT_FLAVOR_DATA = [];
 
 // 選手データから条件に合うスカウトコメントを1つ抽選する(ドラフト・補強共通)
 function pickDraftFlavor(p, isPit) {
-  let eligible = DRAFT_FLAVOR_POOL.filter(f => !f.hint || (f.check && f.check(p, isPit)));
+  let eligible = DRAFT_FLAVOR_DATA.filter(f => evalDraftCondition(f.rule, p, isPit));
   if (eligible.length === 0) return "";
   return eligible[Math.floor(Math.random() * eligible.length)].text;
 }
+
+// 🌐 GitHub上のindex.htmlに埋め込まれた外部データ(#draft-flavor-data)を取得し、DRAFT_FLAVOR_DATAを差し替える
+async function loadExternalDraftFlavor() {
+  try {
+    const url = 'https://raw.githubusercontent.com/yakisoba1229/yyotest/main/index.html?_=' + Date.now();
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('fetch failed');
+    const text = await res.text();
+    const m = text.match(/<script[^>]*id=["']draft-flavor-data["'][^>]*>([\s\S]*?)<\/script>/);
+    if (!m) throw new Error('data block not found');
+    const arr = JSON.parse(m[1]);
+    if (!Array.isArray(arr)) throw new Error('invalid format');
+    DRAFT_FLAVOR_DATA = arr; // ★空配列でも許容(読み込めなければ元々空のまま＝コメント無しで動作)
+    console.log(`ドラフトフレーバー${arr.length}件を外部ファイルから読込みました`);
+  } catch (e) {
+    console.warn('ドラフトフレーバーの外部読込に失敗。コメント無しで続行します。', e);
+  }
+}
+loadExternalDraftFlavor();
 
 function genPlayer(posType,tierKey){
   const T=TIERS[tierKey];
@@ -2797,7 +2863,7 @@ function cardHtml(p,phase){
     <div class="dc-stars">${stars(p.starAvg)}</div>
     <div class="dc-sg">${statsHtml}</div>
     <div class="dc-abi">${p.visAbi.map(a=>`<span class="${getDraftAbiCls(a)}">${a.n}</span>`).join('')}</div>
-    ${p.scoutComment ? `<div class="dc-comment" style="font-size:5.5px;color:#9575cd;text-align:center;margin-top:2px;font-style:italic;">「${p.scoutComment}」</div>` : ''}
+    ${p.scoutComment ? `<div class="dc-comment" style="font-size:7.5px;color:#e6c98a;text-align:center;margin-top:2px;font-style:italic;">「${p.scoutComment}」</div>` : ''}
   </div>`;
 }
 
@@ -7641,7 +7707,7 @@ function scoutCardHtml(p) {
     <div class="dc-ov"><span style="color:#666;font-size:5px">総合</span> <span class="r${prc}">${overallStr}</span></div>
     <div class="dc-sg">${statsHtml}</div>
     <div class="dc-abi">${p.visAbi.map(a => `<span class="${getDraftAbiCls(a)}">${a.n}</span>`).join('')}</div>
-    ${p.scoutComment ? `<div class="dc-comment" style="font-size:5.5px;color:#9575cd;text-align:center;margin-top:2px;font-style:italic;">「${p.scoutComment}」</div>` : ''}
+    ${p.scoutComment ? `<div class="dc-comment" style="font-size:7.5px;color:#e6c98a;text-align:center;margin-top:2px;font-style:italic;">「${p.scoutComment}」</div>` : ''}
   </div>`;
 }
 
