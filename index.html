@@ -1269,8 +1269,8 @@ body {
 [
   { "text": "プロへ強い憧れ", "rule": null },
   { "text": "誰よりも真面目", "rule": null },
-  { "text": "チームメイトからの信頼が厚い", "rule": null },
-  { "text": "球界屈指の愛されキャラ", "rule": null },
+  { "text": "努力家", "rule": null },
+  { "text": "愛されキャラ", "rule": null },
 
   { "text": "パワー自慢", "rule": { "op": "statCompare", "statIdx": 1, "compare": ">", "against": "pS" }, "forType": "fielder" },
   { "text": "走力が武器", "rule": { "op": "isMaxStat", "statIdx": 2 }, "forType": "fielder" },
@@ -2285,73 +2285,151 @@ function stars(avg) {
   return "★".repeat(count);
 }
 
-// 🎙️ 判定の「解釈エンジン」。新しい判定パターンを増やしてもここは変更不要(JSON側のruleだけで表現する)
-function evalDraftCondition(rule, p, isPit) {
-  if (!rule) return true;
-  if (rule.forType === 'pitcher' && !isPit) return false;
-  if (rule.forType === 'fielder' && isPit) return false;
+// ============================================================
+// ドラフト・補強フレーバーテキストの条件判定エンジン
+// ① DRAFT_OPS          … 判定の実体(基本部品)。新しい部品を増やす時だけここを触る
+// ② parseConditionPhrase … 「走力が最高」のような読みやすい文字列 → ①への変換
+// ③ evalCondition/evalRule/evalLeaf … and/or/not の合成、および新旧フォーマットの振り分け
+// ============================================================
 
-  const getStat = (src, idx) => {
-    let v = (src === 'pS' ? p.pS : p.aS)[idx];
-    return (isPit && idx === 0) ? cvSpeed(v) : v; // 投手の0番目(球速)だけ換算する
-  };
-  const cmp = (a, op, b) => op === '>' ? a > b : op === '>=' ? a >= b : op === '<' ? a < b : op === '<=' ? a <= b : op === '==' ? a === b : false;
-
-  switch (rule.op) {
-    case 'statCompare': // 能力値どうしの比較(例：実力のパワー vs 前評判のパワー)
-      return cmp(getStat('aS', rule.statIdx), rule.compare, rule.against === 'pS' ? getStat('pS', rule.statIdx) : rule.against);
-    case 'isMaxStat': { // 指定した能力が、その選手の中で一番高いか
-      let vals = p.aS.map((v, i) => (isPit && i === 0) ? cvSpeed(v) : v);
-      return vals[rule.statIdx] === Math.max(...vals);
-    }
-    case 'avgDiff': // (実力総合 - 前評判総合)を比較
-      return cmp(p.aAvg - p.pAvg, rule.compare, rule.value);
-    case 'avgDiffAbs': // |前評判 - 実力| を比較(乖離の大きさ)
-      return cmp(Math.abs(p.pAvg - p.aAvg), rule.compare, rule.value);
-    case 'allStatsAtLeastRank': { // 全能力が指定ランク以上か
-      const order = ['G','F','E','D','C','B','A','S','Splus'];
-      let minIdx = order.indexOf(rule.minRank);
-      return p.aS.every((v, i) => {
-        let val = (isPit && i === 0) ? cvSpeed(v) : v;
-        return order.indexOf(getRank(val)[0]) >= minIdx;
-      });
-    }
-    case 'hasAbilityTier': { // 指定した特能グループを、指定tier以上で持っているか
-      let e = p.abi && p.abi[rule.group];
-      return !!(e && e.idx >= rule.minTierIdx);
-    }
-    default: return false;
-  }
+// ★能力名(日本語)→インデックスの対応表。野手/投手で意味が違うため別々に持つ
+const STAT_NAME_MAP = {
+  fielder: {'ミート':0,'巧打':0,'パワー':1,'長打力':1,'走力':2,'足':2,'肩':3,'守備':4},
+  pitcher: {'球速':0,'球威':0,'パワー':1,'変化球':2,'変化':2,'制球':3,'コントロール':3,'スタミナ':4}
+};
+function resolveStatIdx(name, isPit) {
+  const map = isPit ? STAT_NAME_MAP.pitcher : STAT_NAME_MAP.fielder;
+  return map.hasOwnProperty(name) ? map[name] : null;
+}
+function getStatVal(p, isPit, idx, src) { // src: 'aS'(実力) or 'pS'(前評判)
+  let v = (src === 'pS' ? p.pS : p.aS)[idx];
+  return (isPit && idx === 0) ? cvSpeed(v) : v;
+}
+function getAllStatVals(p, isPit, src) {
+  return [0,1,2,3,4].map(i => getStatVal(p, isPit, i, src));
+}
+function compareNum(a, op, b) {
+  return op==='>'?a>b:op==='>='?a>=b:op==='<'?a<b:op==='<='?a<=b:op==='=='?a===b:false;
 }
 
-// 🎙️ 表示テキスト本体。外部ファイル化の対象。読み込めなければ空のままで、コメントが一切出ない状態で動作する
+// ★特能名(表示名)→{グループid, tier番号}の逆引き表。「チャンス◯を持っている」のような指定を自動解決する
+const ABI_NAME_TO_TIER = (() => {
+  let map = {};
+  ['common','fielder','pitcher'].forEach(cat=>{
+    (ABI_GROUPS[cat]||[]).forEach(g=>{
+      (g.list||[]).forEach((item,idx)=>{ map[item.n] = {group:g.id, tierIdx:idx}; });
+    });
+  });
+  return map;
+})();
+
+// ① 判定の基本部品(新しい判定パターンを増やす時はここに追加する)
+const DRAFT_OPS = {
+  statCompare:  (p, isPit, r) => compareNum(getStatVal(p,isPit,r.statIdx,'aS'), r.compare, r.against==='pS' ? getStatVal(p,isPit,r.statIdx,'pS') : r.against),
+  isMaxStat:    (p, isPit, r) => { const v=getAllStatVals(p,isPit,'aS'); return v[r.statIdx]===Math.max(...v); },
+  statLowest:   (p, isPit, r) => { const v=getAllStatVals(p,isPit,'aS'); return v[r.statIdx]===Math.min(...v); }, // 🆕
+  statRank:     (p, isPit, r) => { const v=getAllStatVals(p,isPit,'aS'); const sorted=[...v].sort((a,b)=>b-a); return (sorted.indexOf(v[r.statIdx])+1)===r.rank; }, // 🆕
+  statGap:      (p, isPit, r) => { const v=getAllStatVals(p,isPit,'aS'); return compareNum(Math.max(...v)-Math.min(...v), r.compare, r.value); }, // 🆕
+  maxStatAtLeast:(p, isPit, r) => Math.max(...getAllStatVals(p,isPit,'aS')) >= r.value, // 🆕
+  avgAtLeast:   (p, isPit, r) => p.aAvg >= r.value, // 🆕
+  avgDiff:      (p, isPit, r) => compareNum(p.aAvg - p.pAvg, r.compare, r.value),
+  avgDiffAbs:   (p, isPit, r) => compareNum(Math.abs(p.pAvg - p.aAvg), r.compare, r.value),
+  allStatsAtLeastRank: (p, isPit, r) => {
+    const order=['G','F','E','D','C','B','A','S','Splus']; const minIdx=order.indexOf(r.minRank);
+    return getAllStatVals(p,isPit,'aS').every(v => order.indexOf(getRank(v)[0]) >= minIdx);
+  },
+  hasAbilityTier: (p, isPit, r) => { const e=p.abi && p.abi[r.group]; return !!(e && e.idx >= r.minTierIdx); },
+  abilityCount: (p, isPit, r) => compareNum(Object.keys(p.abi||{}).length, r.compare||'>=', r.value), // 🆕
+  hasAnyAbility: (p) => Object.keys(p.abi||{}).length > 0 // 🆕
+};
+
+// ② 読みやすい条件文 → ①の部品呼び出しに変換する
+function parseConditionPhrase(str) {
+  str = str.trim();
+  let m;
+  if (m = str.match(/^(.+?)が(最高|一番高い)$/)) return {op:'isMaxStat', statName:m[1]};
+  if (m = str.match(/^(.+?)が(最低|一番低い)$/)) return {op:'statLowest', statName:m[1]};
+  if (m = str.match(/^(.+?)が(\d+)番目に高い$/)) return {op:'statRank', statName:m[1], rank:parseInt(m[2])};
+  if (m = str.match(/^(.+?)が前評判より(高い|上)$/)) return {op:'statCompare', statName:m[1], compare:'>', against:'pS'};
+  if (m = str.match(/^(.+?)が前評判より(低い|下)$/)) return {op:'statCompare', statName:m[1], compare:'<', against:'pS'};
+  if (m = str.match(/^(.+?)\s*(>=|<=|==|>|<)\s*(\d+)$/)) return {op:'statCompare', statName:m[1].trim(), compare:m[2], against:parseInt(m[3])};
+  if (m = str.match(/^(?:総合|完成度)(\d+)以上$/)) return {op:'avgAtLeast', value:parseInt(m[1])};
+  if (m = str.match(/^最高能力(\d+)以上$/)) return {op:'maxStatAtLeast', value:parseInt(m[1])};
+  if (m = str.match(/^全能力(G|F|E|D|C|B|A|S\+?)以上$/)) return {op:'allStatsAtLeastRank', minRank:(m[1]==='S+'?'Splus':m[1])};
+  if (m = str.match(/^能力差(\d+)以上$/)) return {op:'statGap', compare:'>=', value:parseInt(m[1])};
+  if (m = str.match(/^特能(\d+)個以上$/)) return {op:'abilityCount', compare:'>=', value:parseInt(m[1])};
+  if (str === '特能を持っている') return {op:'hasAnyAbility'};
+  if (m = str.match(/^前評判と実力の差(\d+)以上$/)) return {op:'avgDiffAbs', compare:'>=', value:parseInt(m[1])};
+  if (m = str.match(/^前評判より実力が(\d+)以上高い$/)) return {op:'avgDiff', compare:'>=', value:parseInt(m[1])};
+  if (m = str.match(/^(.+?)を持っている$/)) return {op:'hasAbilityTier', abilityName:m[1]};
+  console.warn(`ドラフトフレーバー：条件文を解釈できませんでした → "${str}"`);
+  return null;
+}
+
+// ③-a 1つの条件(文字列 or and/or/not オブジェクト or 旧形式オブジェクト)を評価する
+function evalCondition(cond, p, isPit) {
+  if (cond == null) return true;
+  if (typeof cond === 'string') { const parsed = parseConditionPhrase(cond); return parsed ? evalLeaf(parsed, p, isPit) : false; }
+  return evalRule(cond, p, isPit);
+}
+// ③-b and/or/not の合成
+function evalRule(rule, p, isPit) {
+  if (!rule) return true;
+  if (rule.and) return rule.and.every(r => evalCondition(r, p, isPit));
+  if (rule.or)  return rule.or.some(r => evalCondition(r, p, isPit));
+  if (rule.not) return !evalCondition(rule.not, p, isPit);
+  return evalLeaf(rule, p, isPit);
+}
+// ③-c 末端の条件を実際に判定する(statName/abilityNameを解決してから①を呼ぶ)
+function evalLeaf(rule, p, isPit) {
+  if (rule.statName !== undefined) {
+    const idx = resolveStatIdx(rule.statName, isPit);
+    if (idx === null) { console.warn(`能力名を認識できません: ${rule.statName}`); return false; }
+    rule = {...rule, statIdx: idx};
+  }
+  if (rule.abilityName !== undefined) {
+    const info = ABI_NAME_TO_TIER[rule.abilityName];
+    if (!info) { console.warn(`特能名を認識できません: ${rule.abilityName}`); return false; }
+    rule = {...rule, group: info.group, minTierIdx: info.tierIdx};
+  }
+  const fn = DRAFT_OPS[rule.op];
+  return fn ? fn(p, isPit, rule) : false;
+}
+
+// 🎙️ 表示テキスト本体。外部ファイル読込前・失敗時は空のままで、コメントなしで動作する
 let DRAFT_FLAVOR_DATA = [];
 
 // 選手データから条件に合うスカウトコメントを1つ抽選する(ドラフト・補強共通)
+// entry.condition があれば新形式、無く entry.rule があれば旧形式として評価する(どちらも共存可)
 function pickDraftFlavor(p, isPit) {
-  let eligible = DRAFT_FLAVOR_DATA.filter(f => evalDraftCondition(f.rule, p, isPit));
+  let eligible = DRAFT_FLAVOR_DATA.filter(f => {
+    if (f.forType === 'pitcher' && !isPit) return false;
+    if (f.forType === 'fielder' && isPit) return false;
+    if (f.condition !== undefined) return evalCondition(f.condition, p, isPit);
+    if (f.rule !== undefined) return evalRule(f.rule, p, isPit); // ★旧データ(statCompare等)はそのまま動く
+    return true;
+  });
   if (eligible.length === 0) return "";
   return eligible[Math.floor(Math.random() * eligible.length)].text;
 }
 
-// 🌐 GitHub上のindex.htmlに埋め込まれた外部データ(#draft-flavor-data)を取得し、DRAFT_FLAVOR_DATAを差し替える
-async function loadExternalDraftFlavor() {
+// ============================================================
+// 🌐 外部JSON読込の共通ヘルパー。data/以下の各ファイルはこれで読み込む
+// (names.json / tutorial.json / wiki.json / match-flavor-data.json なども将来同じ関数で読み込める)
+// ============================================================
+const DATA_BASE_URL = 'https://raw.githubusercontent.com/yakisoba1229/yyotest/main/data/';
+async function loadExternalJsonData(fileName, onSuccess) {
   try {
-    const url = 'https://raw.githubusercontent.com/yakisoba1229/yyotest/main/index.html?_=' + Date.now();
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('fetch failed');
-    const text = await res.text();
-    const m = text.match(/<script[^>]*id=["']draft-flavor-data["'][^>]*>([\s\S]*?)<\/script>/);
-    if (!m) throw new Error('data block not found');
-    const arr = JSON.parse(m[1]);
-    if (!Array.isArray(arr)) throw new Error('invalid format');
-    DRAFT_FLAVOR_DATA = arr; // ★空配列でも許容(読み込めなければ元々空のまま＝コメント無しで動作)
-    console.log(`ドラフトフレーバー${arr.length}件を外部ファイルから読込みました`);
+    const res = await fetch(DATA_BASE_URL + fileName + '?_=' + Date.now());
+    if (!res.ok) throw new Error('fetch failed: ' + res.status);
+    const data = await res.json();
+    onSuccess(data);
+    console.log(`${fileName} を読み込みました`);
   } catch (e) {
-    console.warn('ドラフトフレーバーの外部読込に失敗。コメント無しで続行します。', e);
+    console.warn(`${fileName} の読込に失敗。フォールバックのまま続行します。`, e);
   }
 }
-loadExternalDraftFlavor();
+loadExternalJsonData('draft-flavor-data.json', data => { if (Array.isArray(data)) DRAFT_FLAVOR_DATA = data; });
 
 function genPlayer(posType,tierKey){
   const T=TIERS[tierKey];
