@@ -1,0 +1,24 @@
+[
+  { "text": "プロへ強い憧れ", "condition": null },
+  { "text": "誰よりも真面目", "condition": null },
+  { "text": "チームメイトからの信頼が厚い", "condition": null },
+  { "text": "球界屈指の愛されキャラ", "condition": null },
+
+  { "text": "パワー自慢", "condition": "パワーが前評判より高い", "forType": "fielder" },
+  { "text": "走力が武器", "condition": "走力が最高", "forType": "fielder" },
+  { "text": "ミートが武器", "condition": "ミートが最高", "forType": "fielder" },
+  { "text": "球威が武器", "condition": "球速が最高", "forType": "pitcher" },
+  { "text": "過小評価ぎみ", "condition": "前評判より実力が5以上高い" },
+  { "text": "大怪我から復活", "condition": "前評判と実力の差8以上" },
+  { "text": "目立った弱点がない", "condition": "全能力E以上" },
+  { "text": "完成度が高い", "condition": "総合80以上" },
+  { "text": "怪物じみたポテンシャル", "condition": "最高能力90以上" },
+  { "text": "一芸型", "condition": "能力差30以上" },
+  { "text": "特能が豊富", "condition": "特能4個以上" },
+  { "text": "何かしらの特能を持つ", "condition": "特能を持っている" },
+  { "text": "二番目に速い足", "condition": "走力が2番目に高い", "forType": "fielder" },
+  { "text": "守備には課題", "condition": "守備が最低", "forType": "fielder" },
+  { "text": "チャンスに強い", "condition": "チャンス◯を持っている" },
+  { "text": "非の打ち所がない", "condition": { "and": ["全能力D以上", "総合75以上"] } },
+  { "text": "一点豪華主義", "condition": { "and": ["能力差35以上", { "not": "全能力E以上" }] } }
+]
